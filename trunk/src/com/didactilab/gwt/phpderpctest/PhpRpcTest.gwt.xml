@@ -20,7 +20,7 @@
 -->
 <module rename-to="phpderpctest">
 	<inherits name="com.google.gwt.user.User" />
-	<inherits name="com.didactilab.gwt.phprpc.PhpDeRPC" />
+	<inherits name="com.didactilab.gwt.phprpc.PhpDeRpc" />
 	
 	<inherits name='com.google.gwt.user.theme.standard.Standard'/>
 	
