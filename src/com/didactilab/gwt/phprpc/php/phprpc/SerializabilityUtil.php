@@ -68,7 +68,7 @@ class SerializabilityUtil {
 	}
 	
 	private static function fieldQualifiesForSerialization(Field $field) {
-		if ($field->getDeclaringClass() == Classes::classOf(Throwable)) {
+		if ($field->getDeclaringClass() == Classes::classOf('Throwable')) {
 			if ($field->getName() == 'detailMessage') {
 				assert (self::isNotStaticTransientOrFinal($field));
 				return true;

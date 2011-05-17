@@ -85,7 +85,7 @@ class ParamService implements RemoteService {
 	
 	/** @return boolean */
 	public function objectCall(CustomObject $param) {
-		if (Classes::classOf($param) != Classes::classOf(CustomObject))
+		if (Classes::classOf($param) != Classes::classOf('CustomObject'))
 			return false;
 		return ($param->number == 5);
 	}

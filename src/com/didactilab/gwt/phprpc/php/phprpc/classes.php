@@ -53,6 +53,7 @@ abstract class Clazz {
 	public abstract function getSuperClass();
 	public abstract function getMethods();
 	public abstract function getMethod($methodName);
+	public abstract function hasMethod($methodName);
 	
 	public abstract function newInstance();
 	
@@ -86,6 +87,10 @@ abstract class Clazz {
 	
 	public function isInterface() {
 		return false;
+	}
+	
+	public function getInterfaces() {
+		return array();
 	}
 	
 	public abstract function hasGWTName();
@@ -146,6 +151,10 @@ class JavaClazz extends Clazz {
 		return null;
 	}
 	
+	public function hasMethod($methodName) {
+		return false;
+	}
+	
 	public function hasField($fieldName) {
 		return in_array($fieldName, $this->fields);
 	}
@@ -155,7 +164,7 @@ class JavaClazz extends Clazz {
 	}
 	
 	public function getSuperClass() {
-		return $super;
+		return $this->super;
 	}
 	
 	public function newInstance() {
@@ -235,6 +244,10 @@ class AliasClass extends Clazz {
 	
 	public function getMethod($methodName) {
 		return $this->clazz->getMethod($methodName);
+	}
+	
+	public function hasMethod($methodName) {
+		return $this->clazz->hasMethod($methodName);
 	}
 	
 	public function newInstance() {
@@ -404,6 +417,10 @@ class PhpClazz extends Clazz {
 		}
 	}
 	
+	public function hasMethod($methodName) {
+		return method_exists($this->name, $methodName);
+	}
+	
 	public function getSuperClass() {
 		return Classes::classOf(get_parent_class($this->name));
 	}
@@ -416,8 +433,17 @@ class PhpClazz extends Clazz {
 		return $this->reflect;
 	}
 	
+	public function getInterfaces() {
+		$interfaces = $this->reflect->getInterfaces();
+		$result = array();
+		foreach ($interfaces as $name => $reflect) {
+			$result[] = Classes::classOf($name);
+		}
+		return $result;
+	}
+	
 	public function isEnum() {
-		return $this->reflect->isSubclassOf(Enum);
+		return $this->reflect->isSubclassOf('Enum');
 	}
 	
 	public function getConstantNameByValue($value) {
@@ -452,7 +478,7 @@ class PhpClazz extends Clazz {
 	}
 	
 	public function implementsInterface(Clazz $interface) {
-		if (!interface_exists($interface->getName))
+		if (!interface_exists($interface->getName()))
 			return false;
 		return $this->reflect->implementsInterface($interface->getName());
 	}
@@ -603,6 +629,14 @@ abstract class Method {
 	public abstract function isStatic();
 	public abstract function hasReturnType();
 	public abstract function getReturnType();
+	
+	public function __toString() {
+		$result = '';
+		if ($this->hasReturnType()) {
+			$result .= $this->getReturnType()->getFullName() . ' ';
+		}
+		return $result . $this->clazz->getFullName() . '.' . $this->name . '()';
+	}
 }
 
 class PhpMethod extends Method {
@@ -654,6 +688,33 @@ class PhpMethod extends Method {
 	
 	public function getReturnType() {
 		return $this->returnType;
+	}
+	
+	public function __toString() {
+		$result = '';
+		if ($this->reflect->isPrivate()) {
+			$result .= 'private ';
+		}
+		else if ($this->reflect->isProtected()) {
+			$result .= 'protected ';
+		}
+		else if ($this->reflect->isPublic()) {
+			$result .= 'public ';
+		}
+		
+		if ($this->reflect->isStatic()) {
+			$result .= 'static ';
+		}
+		
+		if ($this->reflect->isAbstract()) {
+			$result .= 'abstract ';
+		}
+		
+		if ($this->reflect->isFinal()) {
+			$result .= 'final ';
+		}
+		
+		return $result . parent::__toString();
 	}
 	
 }
@@ -803,6 +864,9 @@ class Long extends JavaPrimitiveType {
 	const TYPE = 'long';
 	const CLASSNAME = 'java.lang.Long';
 	const SIGNATURE = 'J';
+	
+	const MIN_VALUE = 0x8000000000000000;
+	const MAX_VALUE = 0x7fffffffffffffff;
 	
 	public static function valueOf($value) {
 		return (float) $value;
@@ -971,7 +1035,7 @@ class Classes {
 	
 	public static function init() {
 		
-		self::$CLASSES[Object] = new JavaClazz('Object');
+		self::$CLASSES['Object'] = new JavaClazz('Object');
 		
 		self::$CLASSES['boolean'] = new JavaPrimitiveClazz(Boolean::TYPE, Boolean::SIGNATURE);
 		self::$CLASSES['byte'] = new JavaPrimitiveClazz(Byte::TYPE, Byte::SIGNATURE);
@@ -983,20 +1047,20 @@ class Classes {
 		self::$CLASSES['double'] = new JavaPrimitiveClazz(Double::TYPE, Double::SIGNATURE);
 		self::$CLASSES['void'] = new JavaPrimitiveClazz(Void::TYPE, Void::SIGNATURE);
 		
-		$objClass = self::$CLASSES[Object];
-		self::$CLASSES[Boolean] = new JavaClazz('Boolean', $objClass);
-		self::$CLASSES[Byte] = new JavaClazz('Byte', $objClass);
-		self::$CLASSES[Long] = new JavaClazz('Long', $objClass);
-		self::$CLASSES[Short] = new JavaClazz('Short', $objClass);
-		self::$CLASSES[Integer] = new JavaClazz('Integer', $objClass);
-		self::$CLASSES[Character] = new JavaClazz('Character', $objClass);
-		self::$CLASSES[String] = new JavaClazz('String', $objClass);
-		self::$CLASSES[Float] = new JavaClazz('Float', $objClass);
-		self::$CLASSES[Double] = new JavaClazz('Double', $objClass);
-		self::$CLASSES[Void] = new JavaClazz('Void', $objClass);
+		$objClass = self::$CLASSES['Object'];
+		self::$CLASSES['Boolean'] = new JavaClazz('Boolean', $objClass);
+		self::$CLASSES['Byte'] = new JavaClazz('Byte', $objClass);
+		self::$CLASSES['Long'] = new JavaClazz('Long', $objClass);
+		self::$CLASSES['Short'] = new JavaClazz('Short', $objClass);
+		self::$CLASSES['Integer'] = new JavaClazz('Integer', $objClass);
+		self::$CLASSES['Character'] = new JavaClazz('Character', $objClass);
+		self::$CLASSES['String'] = new JavaClazz('String', $objClass);
+		self::$CLASSES['Float'] = new JavaClazz('Float', $objClass);
+		self::$CLASSES['Double'] = new JavaClazz('Double', $objClass);
+		self::$CLASSES['Void'] = new JavaClazz('Void', $objClass);
 		
 		// Aliases
-		self::$CLASSES['string'] = self::$CLASSES[String];
+		self::$CLASSES['string'] = self::$CLASSES['String'];
 		self::$CLASSES['bool'] = self::$CLASSES['boolean'];
 		
 		// Primitives
@@ -1035,7 +1099,7 @@ class Classes {
 			$className = 'double';
 		}
 		else if ($type == 'string') {
-			$className = String;
+			$className = 'String';
 		}
 		else if ($type == 'array') {
 			return ArrayType::autoClass($value);
@@ -1052,7 +1116,7 @@ class Classes {
 			throw new ClassNotFoundException('Resource have no class');
 		}
 		else if ($type == 'NULL') {
-			$className = Void;
+			$className = 'Void';
 		}
 		else {
 			throw new ClassNotFoundException('Type of value is unknown');

@@ -251,7 +251,7 @@ class CommandServerSerializationStreamWriter extends CommandSerializationStreamW
 		}
 		
 		if ($type != $manualType) {
-			if (!Classes::classOf(GWTSerializable)->isAssignableFrom($type) && !Classes::classOf(IsSerializable)->isAssignableFrom($type)) {
+			if (!Classes::classOf('GWTSerializable')->isAssignableFrom($type) && !Classes::classOf('IsSerializable')->isAssignableFrom($type)) {
 				throw new SerializationException($type->getName() . ' is not a serializable type');
 			}
 		}

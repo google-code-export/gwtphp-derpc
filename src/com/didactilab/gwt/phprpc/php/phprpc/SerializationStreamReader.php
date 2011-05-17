@@ -236,46 +236,46 @@ class CommandServerSerializationStreamReader implements SerializationStreamReade
 	}
 	
 	public function prepareToRead(array $commands) {
-		$this->values = new ArraySimpleIterator($commands);
+		$this->values = new JavaLikeIteratorImpl($commands);
 	}
 	
 	public function readBoolean() {
-		return $this->readNumberCommand(BooleanValueCommand)->getValue();
+		return $this->readNumberCommand('BooleanValueCommand')->getValue();
 	}
 	
 	public function readByte() {
-		return $this->readNumberCommand(ByteValueCommand)->getValue();
+		return $this->readNumberCommand('ByteValueCommand')->getValue();
 	}
 	
 	public function readChar() {
-		return $this->readNumberCommand(CharValueCommand)->getValue();
+		return $this->readNumberCommand('CharValueCommand')->getValue();
 	}
 	
 	public function readDouble() {
-		return $this->readNumberCommand(DoubleValueCommand)->getValue();
+		return $this->readNumberCommand('DoubleValueCommand')->getValue();
 	}
 	
 	public function readFloat() {
-		return $this->readNumberCommand(FloatValueCommand)->getValue();
+		return $this->readNumberCommand('FloatValueCommand')->getValue();
 	}
 	
 	public function readInt() {
-		return $this->readNumberCommand(IntValueCommand)->getValue();
+		return $this->readNumberCommand('IntValueCommand')->getValue();
 	}
 	
 	public function readLong() {
-		return $this->readNumberCommand(LongValueCommand)->getValue();
+		return $this->readNumberCommand('LongValueCommand')->getValue();
 	}
 	
 	public function readObject() {
-		$command = $this->readNextCommand(ValueCommand);
+		$command = $this->readNextCommand('ValueCommand');
 		$v = new CommandServerSerializationStreamReaderVisitor($this->backRefs);
 		$v->accept($command);
 		return array_pop($v->getValues());
 	}
 	
 	public function readShort() {
-		return $this->readNumberCommand(ShortValueCommand)->getValue();
+		return $this->readNumberCommand('ShortValueCommand')->getValue();
 	}
 	
 	public function readString() {

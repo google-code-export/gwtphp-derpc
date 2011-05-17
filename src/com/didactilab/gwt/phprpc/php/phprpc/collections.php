@@ -25,7 +25,7 @@ interface HasHashCode {
 }
 
 /** @gwtname java.util.Collection */
-interface Collection extends Traversable, IteratorAggregate, Countable {
+interface Collection extends Traversable, IteratorAggregate, Countable, HasHashCode {
 	
 	function add($e);
 	function addArray(array $array);
@@ -46,6 +46,35 @@ interface Collection extends Traversable, IteratorAggregate, Countable {
 	function &toArray();
 }
 
+/** @gwtname java.util.Queue */
+interface Queue {
+	function offer($e);
+	function removeHead();
+	function poll();
+	function element();
+	function peek();
+}
+
+/** @gwtname java.util.Deque */
+interface Deque {
+	function addFirst($e);
+	function addLast($e);
+	function offerFirst($e);
+	function offerLast($e);
+	function removeFirst();
+	function removeLast();
+	function pollFirst();
+	function pollLast();
+	function getFirst();
+	function getLast();
+	function peekFirst();
+	function peekLast();
+	function removeFirstOccurence($o);
+	function removeLastOccurence($o);
+	function push($e);
+	function pop();
+}
+
 /** @gwtname java.util.List */
 interface GenericList extends Collection, ArrayAccess {
 	function insert($index, $e);
@@ -64,7 +93,7 @@ interface Set extends Collection {
 }
 
 /** @gwtname java.util.Map */
-interface Map extends IteratorAggregate, ArrayAccess, Countable {
+interface Map extends IteratorAggregate, ArrayAccess, Countable, HasHashCode {
 	function clear();
 	function containsKey($key);
 	function containsValue($value);
@@ -153,6 +182,14 @@ abstract class AbstractCollection implements Collection {
 		return $this->count();
 	}
 	
+	public function hashCode() {
+		$hashCode = '';
+		foreach ($this as $obj) {
+			$hashCode .= '31' . Hasher::hash($obj);
+		}
+		return md5($hashCode);
+	}
+	
 }
 
 class ListIterator implements Iterator {
@@ -167,7 +204,7 @@ class ListIterator implements Iterator {
 	}
 
 	public function next() {
-		return next($this->array);
+		next($this->array);
 	}
 
 	public function key() {
@@ -179,7 +216,7 @@ class ListIterator implements Iterator {
 	}
 
 	public function rewind() {
-		return reset($this->array);
+		reset($this->array);
 	}
 }
 
@@ -318,6 +355,416 @@ class ArrayList extends AbstractList {
 
 }
 
+/** @gwtname java.util.LinkedList */
+class LinkedList extends AbstractList implements Deque {
+	
+	private $header;
+	private $size;
+	
+	public function __construct($from = null) {
+		$this->header = new LinkedListEntry(null, null, null);
+		$this->header->next = $this->header->previous = $this->header;
+		if (!is_null($from)) {
+			if (is_array($from)) {
+				$this->addArray($from);
+			}
+			else if ($from instanceof Collection) {
+				$this->addAll($from);
+			}
+		}
+	}
+	
+	public function getFirst() {
+		if ($this->size == 0) {
+			throw new NoSuchElementException();
+		}
+		return $this->header->next->element;
+	}
+	
+	public function getLast() {
+		if ($this->size == 0) {
+			throw new NoSuchElementException();
+		}
+		return $this->header->previous->element;
+	}
+	
+	public function removeFirst() {
+		return $this->removeEntry($this->header->next);
+	}
+	
+	private function removeEntry($e) {
+		if ($e === $this->header) {
+			throw new NoSuchElementException();
+		}
+		$result = $e->element;
+		$e->previous->next = $e->next;
+		$e->next->previous = $e->previous;
+		$e->next = $e->previous = null;
+		$e->element = null;
+		$this->size--;
+		return $result;
+	}
+	
+	public function removeLast() {
+		return $this->removeEntry($this->header->previous);
+	}
+	
+	public function addFirst($e) {
+		$this->addBefore($e, $this->header->next);
+	}
+	
+	public function addLast($e) {
+		$this->addBefore($e, $this->header);
+	}
+	
+	public function contains($o) {
+		return $this->indexOf($o) != -1;
+	}
+	
+	public function count() {
+		return $this->size;
+	}
+	
+	public function add($e) {
+		$this->addBefore($e, $this->header);
+		return true;
+	}
+	
+	public function removeElement($o) {
+		if (is_null($o)) {
+			for ($e = $this->header->next; $e !== $header; $e = $e->next) {
+				if (is_null($e->element)) {
+					$this->removeEntry($e);
+					return true;
+				}
+			}
+		}
+		else {
+			for ($e = $this->header->next; $e !== $header; $e = $e->next) {
+				if ($o === $e->element) {
+					$this->removeEntry($e);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public function addAll(Collection $c) {
+		return $this->insertAll($this->size, $c);
+	}
+	
+	public function insertAll($index, Collection $c) {
+		if ($index < 0 || $index > $this->size) {
+			throw new IndexOutOfBoundsException("Index: $index, Size: $this->size");
+		}
+		
+		$a = $c->toArray();
+		$numNew = count($a);
+		if ($numNew == 0) {
+			return false;
+		}
+		$successor = ($index == $this->size ? $this->header : $this->entry($index));
+		$predecessor = $successor->previous;
+		for ($i=0; $i<$numNew; $i++) {
+			$e = new LinkedListEntry($a[$i], $successor, $predecessor);
+			$predecessor->next = $e;
+			$predecessor = $e;
+		}
+		$successor->previous = $predecessor;
+		
+		$this->size += $numNew;
+		return true;
+	}
+	
+	public function clear() {
+		$e = $this->next;
+		while ($e != $this->header) {
+			$next = $e->next;
+			$e->next = $e->previous = null;
+			$e->element = null;
+			$e = $next;
+		}
+		$this->header->next = $this->header->previous = $this->header;
+		$this->size = 0;
+	}
+	
+	public function get($index) {
+		return $this->entry($index)->element;
+	}
+	
+	public function set($index, $element) {
+		$e = $this->entry($index);
+		$oldVal = $e->element;
+		$e->element = $element;
+		return $oldVal;
+	}
+	
+	public function insert($index, $element) {
+		$this->addBefore($element, ($index == $this->size ? $this->header : $this->entry($index)));
+	}
+	
+	public function remove($index) {
+		return $this->removeEntry($this->entry($index));
+	}
+	
+	private function entry($index) {
+		if ($index < 0 || $index >= $this->size) {
+			throw new IndexOutOfBoundsException("Index: $index, Size: $this->size");
+		}
+		
+		$e = $this->header;
+		if ($index < ($this->size >> 1)) {
+			for ($i=0; $i<=$index; $i++) {
+				$e = $e->next;
+			}
+		}
+		else {
+			for ($i=$this->size; $i>$index; $i--) {
+				$e = $e->previous;
+			}
+		}
+		return $e;
+	}
+	
+	public function indexOf($o) {
+		$index = 0;
+		if (is_null($o)) {
+			for ($e = $this->header->next; $e != $this->header; $e = $e->next) {
+				if (is_null($e->element)) {
+					return $index;
+				}
+				$index++;
+			}
+		}
+		else {
+			for ($e = $this->header->next; $e != $this->header; $e = $e->next) {
+				if ($e->element === $o) {
+					return $index;
+				}
+				$index++;
+			}
+		}
+		return -1;
+	}
+	
+	public function lastIndexOf($o) {
+		$index = $this->size;
+		if (is_null($o)) {
+			for ($e = $this->header->previous; $e != $this->header; $e = $e->previous) {
+				if (is_null($e->element)) {
+					return $index;
+				}
+				$index++;
+			}
+		}
+		else {
+			for ($e = $this->header->previous; $e != $this->header; $e = $e->previous) {
+				if ($e->element === $o) {
+					return $index;
+				}
+				$index++;
+			}
+		}
+		return -1;
+	}
+	
+	public function peek() {
+		if ($this->size == 0) {
+			return null;
+		}
+		return $this->getFirst();
+	}
+	
+	public function element() {
+		return $this->getFirst();
+	}
+	
+	public function poll() {
+		if ($this->size == 0) {
+			return null;
+		}
+		return $this->removeFirst();
+	}
+	
+	public function removeHead() {
+		return $this->removeFirst();
+	}
+	
+	public function offer($e) {
+		return $this->add($e);
+	}
+	
+	public function offerFirst($e) {
+		$this->addFirst($e);
+		return true;
+	}
+	
+	public function offerLast($e) {
+		$this->addLast($e);
+		return true;
+	}
+	
+	public function peekFirst() {
+		if ($this->size == 0) {
+			return null;
+		}
+		return $this->getFirst();
+	}
+	
+	public function peekLast() {
+		if ($this->size == 0) {
+			return null;
+		}
+		return $this->getLast();
+	}
+	
+	public function pollFirst() {
+		if ($this->size == 0) {
+			return null;
+		}
+		return $this->removeFirst();
+	}
+	
+	public function pollLast() {
+		if ($this->size == 0) {
+			return null;
+		}
+		return $this->removeLast();
+	}
+	
+	public function push($e) {
+		$this->addFirst($e);
+	}
+	
+	public function pop() {
+		return $this->removeFirst();
+	}
+	
+	public function removeFirstOccurence($o) {
+		return $this->removeElement($o);
+	}
+	
+	public function removeLastOccurence($o) {
+		if (is_null($o)) {
+			for ($e = $this->header->previous; $e != $this->header; $e = $e->previous) {
+				if (is_null($e->element)) {
+					$this->removeEntry($e);
+					return true;
+				}
+			}
+		}
+		else {
+			for ($e = $this->header->previous; $e != $this->header; $e = $e->previous) {
+				if ($o === $e->element) {
+					$this->removeEntry($e);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public function getIterator() {
+		return new LinkedListIterator($this->header, 0, $this->size);
+	}
+	
+	private function addBefore($e, LinkedListEntry $entry) {
+		$newEntry = new LinkedListEntry($e, $entry, $entry->previous);
+		$newEntry->previous->next = $newEntry;
+		$newEntry->next->previous = $newEntry;
+		$this->size++;
+		return $newEntry;
+	}
+	
+	public function &toArray() {
+		$result = array();
+		for ($e=$this->header->next; $e != $this->header; $e = $e->next) {
+			$result[] = $e->element;
+		}
+		return $result;
+	}
+	
+	public function offsetExists($offset) {
+		return $offset > 0 && $offset < $this->size;
+	}
+	
+	public function offsetSet($offset, $value) {
+		$this->set($offset, $value);
+	}
+	
+	public function offsetGet($offset) {
+		return $this->get($offset);
+	}
+	
+	public function offsetUnset($offset) {
+		$this->remove($offset);
+	}
+}
+
+class LinkedListEntry {
+	public $element;
+	public $next;
+	public $previous;
+	
+	public function __construct($element, Entry $next = null, Entry $previous = null) {
+		$this->element = $element;
+		$this->next = $next;
+		$this->previous = $previous;
+	}
+}
+
+class LinkedListIterator implements Iterator {
+	
+	private $size;
+	private $next;
+	private $nextIndex;
+	private $header;
+	
+	public function __construct(LinkedListEntry $header, $index, $size) {
+		$this->header = $header;
+		$this->size = $size;
+		if ($index < 0 || $index >= $size) {
+			throw new IndexOutOfBoundsException("Index: $index, Size: $size");
+		}
+		
+		if ($index < ($size >> 1)) {
+			$this->next = $header->next;
+			for ($this->nextIndex=0; $this->$nextIndex < $index; $this->$nextIndex++) {
+				$this->next = $this->next->next;
+			}
+		}
+		else {
+			$this->next = $header;
+			for ($this->nextIndex=$size; $this->nextIndex > $index; $this->nextIndex--) {
+				$this->next = $this->next->previous;
+			}
+		}
+	}
+	
+	public function current() {
+		return $this->next->element;
+	}
+
+	public function next() {
+		$this->next = $this->next->next;
+		$this->nextIndex++;
+	}
+
+	public function key() {
+		return $this->nextIndex;
+	}
+
+	public function valid() {
+		return $this->nextIndex != $this->size;
+	}
+
+	public function rewind() {
+		$this->nextIndex = 0;
+		$this->next = $this->header->next;
+	}
+}
+
 /** @gwtname java.util.Vector */
 class Vector extends ArrayList {
 }
@@ -335,12 +782,12 @@ class SetIterator implements Iterator {
 	}
 
 	public function next() {
-		$pos++;
+		$this->pos++;
 		return next($this->array);
 	}
 
 	public function key() {
-		return $pos;
+		return $this->pos;
 	}
 
 	public function valid() {
@@ -348,7 +795,7 @@ class SetIterator implements Iterator {
 	}
 
 	public function rewind() {
-		$pos = 0;
+		$this->pos = 0;
 		return reset($this->array);
 	}
 }
@@ -407,7 +854,8 @@ class HashSet extends AbstractCollection {
 	}
 	
 	public function &toArray() {
-		return array_values($this->array);
+		$temp = array_values($this->array);
+		return $temp;
 	}
 	
 	public function getIterator() {
@@ -467,6 +915,14 @@ abstract class AbstractMap implements Map {
 	
 	public function size() {
 		return $this->count();
+	}
+	
+	public function hashCode() {
+		$hashCode = '';
+		foreach ($this as $key => $value) {
+			$hashCode .= '32' . Hasher::hash($key) . '=>' . Hasher::hash($value);
+		}
+		return md5($hashCode);
 	}
 }
 
@@ -589,8 +1045,8 @@ class HashMap extends AbstractMap {
 /** @gwtname java.util.TreeMap */
 class TreeMap extends HashMap {}
 
-/** @gwtname java.util.IdentityMap */
-class IdentityMap extends HashMap {}
+/** @gwtname java.util.IdentityHashMap */
+class IdentityHashMap extends HashMap {}
 
 class ObjectMap extends HashMap {
 	public function __construct($from = null) {
@@ -599,6 +1055,248 @@ class ObjectMap extends HashMap {
 }
 
 class HybridMap extends HashMap {
+}
+
+class UnmodifiableCollection implements Collection {
+	
+	private $c;
+	
+	public function __construct(Collection $c) {
+		if (is_null($c)) {
+			throw new NullPointerException();
+		}
+		$this->c = $c;
+	}
+	
+	public function add($e) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function addArray(array $array) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function addAll(Collection $c) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function clear() {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function removeAll(Collection $c) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function removeArray(array $array) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function removeElement($e) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function retainAll(Collection $c) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function retainArray(array $array) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function contains($o) {
+		return $this->c->contains($o);
+	}
+	
+	public function containsAll(Collection $c) {
+		return $this->c->containsAll($c);
+	}
+	
+	public function containsArray(array $array) {
+		return $this->c->containsArray($array);
+	}
+	
+	public function isEmpty() {
+		return $this->c->isEmpty();
+	}
+	
+	public function size() {
+		return $this->c->size();
+	}
+	
+	public function getIterator() {
+		return $this->c->getIterator();
+	}
+	
+	public function count() {
+		return count($this->c);
+	}
+	
+	public function &toArray() {
+		return $this->c->toArray();
+	}
+	
+	public function hashCode() {
+		return $this->c->hashCode();
+	}
+	
+}
+
+class UnmodifiedList extends UnmodifiableCollection implements GenericList {
+	
+	private $l;
+	
+	public function __construct(GenericList $l) {
+		if (is_null($l)) {
+			throw new NullPointerException();
+		}
+		parent::__construct($l);
+		$this->l = $l;
+	}
+	
+	public function insertAll($index, Collection $c) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function insertArray($index, array $array) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function remove($index) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function insert($index, $e) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function indexOf($o) {
+		return $this->l->indexOf($o);
+	}
+	
+	public function get($index) {
+		return $this->l->get($index);
+	}
+	
+	public function set($index, $value) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function offsetExists($offset) {
+		return $this->l->offsetExists($offset);
+	}
+	
+	public function offsetSet($offset, $value) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function offsetGet($offset) {
+		return $this->offsetGet($offset);
+	}
+	
+	public function offsetUnset($offset) {
+		throw new UnsupportedOperationException();
+	}
+}
+
+class UnmodifiableSet extends UnmodifiableCollection implements Set {
+	
+	public function __construct(Set $s) {
+		if (is_null($s)) {
+			throw new NullPointerException();
+		}
+		parent::__construct($s);
+	}
+	
+}
+
+class UnmodifiableMap implements Map {
+	
+	private $m;
+	
+	public function __construct(Map $m) {
+		if (is_null($m)) {
+			throw new NullPointerException();
+		}
+		$this->m = $m;
+	}
+	
+	public function putAll(Map $m) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function putArray(array $a) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function size() {
+		return count($this->m);
+	}
+	
+	public function clear() {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function containsKey($key) {
+		return $this->m->containsKey($key);
+	}
+	
+	public function containsValue($value) {
+		return $this->m->containsValue($value);
+	}
+	
+	public function isEmpty() {
+		return $this->m->isEmpty();
+	}
+	
+	public function get($key) {
+		return $this->m->get($key);
+	}
+	
+	public function put($key, $value) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function remove($key) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function values() {
+		return $this->m->values();
+	}
+	
+	public function keys() {
+		return $this->m->keys();
+	}
+	
+	public function count() {
+		return count($this->m);
+	}
+	
+	public function offsetExists($offset) {
+		return $this->m->offsetExists($offset);
+	}
+	
+	public function offsetSet($offset, $value) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function offsetGet($offset) {
+		return $this->m->iffsetGet($offset);
+	}
+	
+	public function offsetUnset($offset) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public function getIterator() {
+		return $this->m->getIterator();
+	}
+	
+	public function hashCode() {
+		return $this->m->hashCode();
+	}
+	
 }
 
 class Hasher {
@@ -622,6 +1320,9 @@ class Hasher {
 		if ($x instanceof HasHashCode) {
 			return $x->hashCode();
 		}
+		else if (Classes::classOf($x)->hasMethod('hashCode')) {
+			return $x->hashCode();
+		}
 		else {
 			return spl_object_hash($x);
 		}
@@ -632,12 +1333,12 @@ class Hasher {
 	}
 }
 
-interface SimpleIterator {
+interface JavaLikeIterator {
 	function hasNext();
 	function next();
 }
 
-class ArraySimpleIterator implements SimpleIterator {
+class JavaLikeIteratorImpl implements JavaLikeIterator {
 	
 	private $array;
 	private $count;
@@ -669,6 +1370,22 @@ class Collections {
 		else {
 			return usort($list->toArray(), $func);
 		}
+	}
+	
+	public static function unmodifiableCollection(Collection $c) {
+		return new UnmodifiableCollection($c);
+	}
+	
+	public static function unmodifiableList(GenericList $l) {
+		return new UnmodifiableList($l);
+	}
+	
+	public static function unmodifiableSet(Set $s) {
+		return new UnmodifiableSet($s);
+	}
+	
+	public static function unmodifiableMap(Map $m) {
+		return new UnmodifiableMap($m);
 	}
 	
 }
@@ -801,8 +1518,8 @@ final class TreeMap_CustomFieldSerializer {
 	
 }
 
-/** @gwtname com.google.gwt.user.client.rpc.core.java.util.IdentityMap_CustomFieldSerializer */
-final class IdentityMap_CustomFieldSerializer {
+/** @gwtname com.google.gwt.user.client.rpc.core.java.util.IdentityHashMap_CustomFieldSerializer */
+final class IdentityHashMap_CustomFieldSerializer {
 	
 	public static function transform(SerializationStreamReader $streamReader) {
 		return Map_CustomFieldSerializerBase::transform($streamReader);
@@ -864,4 +1581,4 @@ final class Map_CustomFieldSerializerBase {
 	
 }
 
-Classes::registerAlias('List', Classes::classOf(GenericList));
+Classes::registerAlias('List', Classes::classOf('GenericList'));

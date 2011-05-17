@@ -58,4 +58,8 @@ class Throwable implements IsSerializable, Magic {
 	public function getMagicClassFullName() {
 		return $this->exceptionClass->getFullName();
 	}
+	
+	public function getExceptionClass() {
+		return $this->exceptionClass;
+	}
 }
