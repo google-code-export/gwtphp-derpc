@@ -85,7 +85,7 @@ class SimplePayloadDecoder {
 
 	private function decodeCommand() {
 		$command = $this->next();
-		if ($command == NLCHAR) {
+		if ($command == NL_CHAR) {
 			$command = $this->next();
 		}
 		$token = $this->token();
@@ -139,7 +139,7 @@ class SimplePayloadDecoder {
 			}
 			case ENUM_TYPE: {
 				// ETypeSeedName~IOrdinal~
-				$ordinal = $this->readCommand(IntValueCommand)->getValue();
+				$ordinal = $this->readCommand('IntValueCommand')->getValue();
 				
 				$clazz = $this->findClass($token);
 				
@@ -153,7 +153,7 @@ class SimplePayloadDecoder {
 				// Encoded as (leafType, dimensions, length, ...)
 				$leaf = $this->findClass($token);
 
-				$numDims = $this->readCommand(IntValueCommand)->getValue();
+				$numDims = $this->readCommand('IntValueCommand')->getValue();
 				$clazz = null;
 				if ($numDims > 1) {
 					$clazz = ArrayType::clazz($leaf, $numDims);
@@ -165,9 +165,9 @@ class SimplePayloadDecoder {
 				$x = new ArrayValueCommand($clazz);
 				$this->pushIdentity($x);
 
-				$length = $this->readCommand(IntValueCommand)->getValue();
+				$length = $this->readCommand('IntValueCommand')->getValue();
 				for ($i = 0; $i < $length; $i++) {
-					$x->add($this->readCommand(ValueCommand));
+					$x->add($this->readCommand('ValueCommand'));
 				}
 				break;
 			}
@@ -210,13 +210,13 @@ class SimplePayloadDecoder {
 				$this->toReturn = new ReturnCommand();
 				$toRead = Integer::valueOf($token);
 				for ($i=0; $i<$toRead; $i++) {
-					$this->toReturn->addValue($this->readCommand(ValueCommand));
+					$this->toReturn->addValue($this->readCommand('ValueCommand'));
 				}
 				break;
 			}
 			case THROW_TYPE: {
 				// T...value...
-				$this->toThrow = $this->readCommand(ValueCommand);
+				$this->toThrow = $this->readCommand('ValueCommand');
 				break;
 			}
 			case BACKREF_TYPE: {
@@ -236,9 +236,8 @@ class SimplePayloadDecoder {
 	}
 
 	private function findClass($token) {
-		$clazz = $this->classCache[$token];
-		if ($clazz != null) {
-			return $clazz;
+		if (isset($this->classCache[$token])) {
+			return $this->classCache[$token];
 		}
 
 		$className = $this->clientOracle->getTypeName($token);
@@ -271,7 +270,7 @@ class SimplePayloadDecoder {
 		$c = mb_substr($this->payload, $this->idx++, 1);
 		//$c = $this->payload[$this->idx++];
 
-		if (c == '\\') {
+		if ($c == '\\') {
 			switch (mb_substr($this->payload, $this->idx++, 1)) {
 			//switch ($this->payload[$this->idx++]) {
 				case '0':
@@ -338,37 +337,37 @@ class SimplePayloadDecoder {
 		$this->backRefs[count($this->backRefs)] = $x;
 	}
 	
-	private function readCommand($clazz) {
+	private function readCommand($className) {
 		$this->decodeCommand();
 		$value = array_pop($this->commands);
-		assert($value instanceof $clazz);
+		assert($value instanceof $className);
 		return $value;
 	}
 	
 	private function readFields(InvokeCustomFieldSerializerCommand $x) {
-		$length = $this->readCommand(IntValueCommand)->getValue();
+		$length = $this->readCommand('IntValueCommand')->getValue();
 		for ($i=0; $i<$length; $i++) {
-			$x->addValue($this->readCommand(ValueCommand));
+			$x->addValue($this->readCommand('ValueCommand'));
 		}
 	}
 	
 	private function readSetter(Clazz $clazz, HasSetters $x) {
 		if (!$this->clientOracle->isScript()) {
-			$fieldDeclClassName = $this->readCommand(StringValueCommand)->getValue();
+			$fieldDeclClassName = $this->readCommand('StringValueCommand')->getValue();
 			if ($fieldDeclClassName != null) {
 				$clazz = $this->findClass($fieldDeclClassName);
 			}
 		}
-		$fieldId = $this->readCommand(StringValueCommand)->getValue();
+		$fieldId = $this->readCommand('StringValueCommand')->getValue();
 		
 		$data = $this->clientOracle->getFieldName($clazz, $fieldId);
-		$value = $this->readCommand(ValueCommand);
+		$value = $this->readCommand('ValueCommand');
 		
 		$x->set($data->class, $data->fieldName, $value);
 	}
 	
 	private function readSetters(Clazz $clazz, HasSetters $x) {
-		$length = $this->readCommand(IntValueCommand)->getValue();
+		$length = $this->readCommand('IntValueCommand')->getValue();
 		for ($i=0; $i<$length; $i++) {
 			$this->readSetter($clazz, $x);
 		}

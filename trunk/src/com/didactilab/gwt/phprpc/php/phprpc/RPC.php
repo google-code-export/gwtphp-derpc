@@ -88,7 +88,7 @@ class RPC {
 			//$servicePhpName = self::serviceInterfaceToPhpService($serviceIntfName);
 			$serviceIntf = self::getClassForSerializedName($serviceIntfName);
 			
-			if (!Classes::classOf(RemoteService)->isAssignableFrom($serviceIntf)) {
+			if (!Classes::classOf('RemoteService')->isAssignableFrom($serviceIntf)) {
 				throw new IncompatibleRemoteServiceException('Blocked attempt to access interface "' . 
 					$serviceIntf->getName() . '" which does not extends RemoteService');
 			}

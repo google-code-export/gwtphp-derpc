@@ -196,8 +196,12 @@ class WebModeClientOracle extends ClientOracle {
 		
 		//echo '{' . var_export($data->methodJsniNamesToIdents, true) . '}';
 		
-		$jsIdent = $data->methodJsniNamesToIdents[$sb];
-		return $jsIdent;
+		if (isset($data->methodJsniNamesToIdents[$sb])) {
+			return $data->methodJsniNamesToIdents[$sb];
+		}
+		else {
+			return null;
+		}
 	}
 	
 	public function getOperableFields(Clazz $clazz) {
@@ -241,8 +245,14 @@ class WebModeClientOracle extends ClientOracle {
 		if (mb_strpos($seedName, 'Class$') !== FALSE) {
 			$seedName = mb_substr($seedName, 6);
 		}
-		$data = $this->seedNamesToClassData[$seedName];
-		return $data == null ? null : $data->typeName;
+		
+		if (isset($this->seedNamesToClassData[$seedName])) {
+			$data = $this->seedNamesToClassData[$seedName];
+			return $data->typeName;
+		}
+		else {
+			return null;
+		}
 	}
 	
 	public function isScript() {

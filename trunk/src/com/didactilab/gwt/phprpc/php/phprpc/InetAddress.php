@@ -43,7 +43,7 @@ abstract class InetAddress {
 		}
 		else if (count($addr) == Inet6Address::INADDRSZ) {
 			$newAddr = Inet6Address::convertFromIPv4MappedAddress($addr);
-			if ($netAddr != null)
+			if ($newAddr != null)
 				return new Inet4Address($newAddr);
 			else
 				return new Inet6Address($addr);
@@ -66,10 +66,11 @@ abstract class InetAddress {
 	}
 	
 	public static function getRemoteAddress() {
-		$ip_address = $_SERVER['HTTP_X_FORWARDED_FOR'];
-	
-		if ($ip_address == NULL) {
+		if (!isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
 			$ip_address = $_SERVER['REMOTE_ADDR']; 
+		}
+		else {
+			$ip_address = $_SERVER['HTTP_X_FORWARDED_FOR'];
 		}
 		
 		return self::getByAddress($ip_address);

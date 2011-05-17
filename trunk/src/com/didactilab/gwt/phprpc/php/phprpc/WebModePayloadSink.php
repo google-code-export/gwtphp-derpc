@@ -254,18 +254,18 @@ class WebModePayloadVisitor extends RpcCommandVisitor {
 		$currentBackRef = $this->beginValue($x);
 		$this->lparen();
 		
-		$makeReader = new InstantiateCommand(Classes::classOf(CommandClientSerializationStreamReader));
+		$makeReader = new InstantiateCommand(Classes::classOf('CommandClientSerializationStreamReader'));
 		$this->parent->makeBackRef($makeReader);
 		
 		$payload = new ArrayValueCommand(Classes::classOf('Object'));
 		foreach ($x->getValues() as $value) {
 			$payload->add($value);
 		}
-		$makeReader->set(Classes::classOf(CommandClientSerializationStreamReader), 'payload', $payload);
+		$makeReader->set(Classes::classOf('CommandClientSerializationStreamReader'), 'payload', $payload);
 		
 		$instantiateIdent = $this->clientOracle->getMethodId($x->getSerializerClass(), 
 				'instantiate', 
-				array(Classes::classOf(SerializationStreamReader)));
+				array(Classes::classOf('SerializationStreamReader')));
 				
 		// x = new Foo,
 		// x = instantiate(reader),
@@ -302,7 +302,7 @@ class WebModePayloadVisitor extends RpcCommandVisitor {
 		
 		$deserializeIdent = $this->clientOracle->getMethodId(
 				$x->getSerializerClass(), 'deserialize',
-				array(Classes::classOf(SerializationStreamReader), $x->getManuallySerializedType()));
+				array(Classes::classOf('SerializationStreamReader'), $x->getManuallySerializedType()));
 		if ($deserializeIdent != null) {
 			// deserializer(reader, obj),
 			$this->push($deserializeIdent);
