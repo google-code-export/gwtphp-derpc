@@ -19,6 +19,7 @@
 package com.didactilab.gwt.phprpc.rebind;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -48,6 +49,9 @@ public class PhpRpcServiceGenerator extends RpcServiceGenerator {
 	private JClassType serializableClass;
 	private JClassType isSerializableClass;
 	
+	private HashSet<String> excludedTypes = new HashSet<String>();
+	private HashSet<String> excludedExceptions = new HashSet<String>();
+	
 	private HashSet<JClassType> classes = new HashSet<JClassType>();
 	private HashSet<JEnumType> enums = new HashSet<JEnumType>();
 	private HashSet<JClassType> exceptions = new HashSet<JClassType>();
@@ -74,8 +78,11 @@ public class PhpRpcServiceGenerator extends RpcServiceGenerator {
 		else {
 			JClassType classType = type.isClass();
 			if (classType != null) {
-				if (classes.add(classType)) {
-					exploreClass(classType, false);
+				if (!classes.contains(classType)) {
+					if (!existsIn(excludedTypes, classType.getQualifiedSourceName())) {
+						classes.add(classType);
+						exploreClass(classType, false);
+					}
 				}
 			}
 		}
@@ -123,14 +130,16 @@ public class PhpRpcServiceGenerator extends RpcServiceGenerator {
 	}
 	
 	private void addExceptionClass(JClassType exceptionType) {
-		if (exceptionType.getQualifiedSourceName().equals("java.lang.Exception"))
+		if (exceptions.contains(exceptionType))
+			return;
+		if (existsIn(excludedExceptions, exceptionType.getQualifiedSourceName()))
+			return;
+		/*if (exceptionType.getQualifiedSourceName().equals("java.lang.Exception"))
 			return;
 		if (exceptionType.getQualifiedSourceName().equals("java.lang.RuntimeException"))
-			return;
-		if (!exceptions.contains(exceptionType)) {
-			exceptions.add(exceptionType);
-			addExceptionClass(exceptionType.getSuperclass());
-		}
+			return;*/
+		exceptions.add(exceptionType);
+		addExceptionClass(exceptionType.getSuperclass());
 	}
 	
 	private void exploreClassForException(JClassType toExplore) {
@@ -153,6 +162,21 @@ public class PhpRpcServiceGenerator extends RpcServiceGenerator {
     	}
 	}
 	
+	private boolean existsIn(Collection<String> collection, String ident) {
+		for (String pattern : collection) {
+			if (pattern.startsWith("~")) {
+				pattern = pattern.substring(1);
+				if (ident.matches(pattern))
+					return true;
+			}
+			else {
+				if (ident.equals(pattern))
+					return true;
+			}
+		}
+		return false;
+	}
+	
 	@Override
 	public RebindResult generateIncrementally(TreeLogger logger, 
 		      GeneratorContextExt context, String typeName) 
@@ -165,6 +189,17 @@ public class PhpRpcServiceGenerator extends RpcServiceGenerator {
 		    	classes.clear();
 		    	enums.clear();
 		    	exceptions.clear();
+		    	
+		    	try {
+		    		ConfigurationProperty prop = context.getPropertyOracle().getConfigurationProperty("gwt.phprpc.excludeJavaTypeToPhp");
+		    		excludedTypes.addAll(prop.getValues());
+		    		prop = context.getPropertyOracle().getConfigurationProperty("gwt.phprpc.excludeJavaExceptionToPhp");
+		    		excludedExceptions.addAll(prop.getValues());
+		    	} catch (BadPropertyValueException ee) {
+		    		logger.log(TreeLogger.ERROR, ee.getMessage());
+					throw new UnableToCompleteException();
+		    	}
+		    	
 		    	exploreClass(remoteService, true);
 		    	exploreClassForException(remoteService);
 		    	

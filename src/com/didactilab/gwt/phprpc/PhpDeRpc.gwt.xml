@@ -42,6 +42,21 @@
   		Path(s) to include in all generated service
   	-->
 	<define-configuration-property name="gwt.phprpc.includePaths" is-multi-valued="true" />
+	
+	<!-- 
+		Exclude pattern or file from generating php file
+	-->
+	<define-configuration-property name="gwt.phprpc.excludeJavaTypeToPhp" is-multi-valued="true" />
+	<extend-configuration-property name="gwt.phprpc.excludeJavaTypeToPhp" value="~java[.].*" />
+	
+	<define-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" is-multi-valued="true" />
+	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.Exception" />
+	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.RuntimeException" />
+	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.ClassNotFoundException" />
+	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.NoSuchMethodException" />
+	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.IllegalArgumentException" />
+	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.IllegalStateException" />
+	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.NullPointerException" />
   	
 	<define-linker name="phpLinker" class="com.didactilab.gwt.phprpc.linker.PhpClientOracleLinker" />
 	<add-linker name="phpLinker" />
