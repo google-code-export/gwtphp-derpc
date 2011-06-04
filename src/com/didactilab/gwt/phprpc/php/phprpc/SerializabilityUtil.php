@@ -23,17 +23,21 @@ require_once PHPRPC_ROOT . 'rpcphptools.php';
 
 class SerializabilityUtil {
 	
-	private static $classSerializableFieldsCache = null;
-	private static $classCustomSerializerCache = null;
+	const JRE_SERIALIZER_PACKAGE = 'com.google.gwt.user.client.rpc.core';
+	
+	private static $classSerializableFieldsCache;
+	private static $classCustomSerializerCache;
+	
+	public static function init() {
+		self::$classSerializableFieldsCache = new IdentityHashMap();
+		self::$classCustomSerializerCache = new IdentityHashMap();
+	}
 	
 	public static function hasCustomFieldSerializer(Clazz $instanceType) {
 		assert($instanceType != null);
 		if ($instanceType->isArray()) {
 			return null;
 		}
-		
-		if (self::$classCustomSerializerCache == null)
-			self::$classCustomSerializerCache = new ObjectMap();
 		
 		$result = self::$classCustomSerializerCache->get($instanceType);
 		if ($result == null) {
@@ -47,20 +51,20 @@ class SerializabilityUtil {
 	}
 	
 	public static function applyFieldSerializationPolicy(Clazz $clazz) {
-		if (self::$classSerializableFieldsCache == null)
-			self::$classSerializableFieldsCache = new ObjectMap();
-		
 		$serializableFields = self::$classSerializableFieldsCache->get($clazz);
-		if ($serializableFields == null) {
+		if (is_null($serializableFields)) {
 			$fieldList = array();
-			foreach ($clazz->getFields() as $field) {
+			$fields = $clazz->getFields();
+			foreach ($fields as $field) {
 				if (self::fieldQualifiesForSerialization($field)) {
 					$fieldList[] = $field;
 				}
 			}
 			$serializableFields = $fieldList;
 			
-			asort($serializableFields);
+			// sort the fields by name
+			//usort($serializableFields, array('SerializabilityUtil', 'fieldComparator'));
+			usort($serializableFields, array('self', 'fieldComparator'));
 			
 			self::$classSerializableFieldsCache->put($clazz, $serializableFields);
 		}
@@ -68,8 +72,8 @@ class SerializabilityUtil {
 	}
 	
 	private static function fieldQualifiesForSerialization(Field $field) {
-		if ($field->getDeclaringClass() == Classes::classOf('Throwable')) {
-			if ($field->getName() == 'detailMessage') {
+		if ($field->getDeclaringClass() === Classes::classOf('Throwable')) {
+			if ($field->getName() === 'detailMessage') {
 				assert (self::isNotStaticTransientOrFinal($field));
 				return true;
 			}
@@ -97,7 +101,10 @@ class SerializabilityUtil {
 			return $customSerializer;
 		}
 		
-		// TODO: miss
+		$customSerializerClass = self::getCustomFieldSerializer(self::JRE_SERIALIZER_PACKAGE . '.' . $simpleSerializerName);
+		if (!is_null($customSerializerClass)) {
+			return $customSerializerClass;
+		}
 		
 		return null;
 	}
@@ -111,4 +118,9 @@ class SerializabilityUtil {
 		}
 	}
 	
+	public static function fieldComparator(Field $f1, Field $f2) {
+		return strcmp($f1->getName(), $f2->getName());
+	}
+	
 }
+SerializabilityUtil::init();
