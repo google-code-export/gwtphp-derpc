@@ -24,6 +24,10 @@ interface HasHashCode {
 	function hashCode();
 }
 
+/** @gwtname java.util.NoSuchElementException */
+class NoSuchElementException extends Exception {
+}
+
 /** @gwtname java.util.Collection */
 interface Collection extends Traversable, IteratorAggregate, Countable, HasHashCode {
 	
@@ -108,6 +112,16 @@ interface Map extends IteratorAggregate, ArrayAccess, Countable, HasHashCode {
 	
 	function values();
 	function keys();
+}
+
+/** @gwtname java.util.SortedMap */
+interface SortedMap extends Map {
+	function comparator();
+	function firstKey();
+	function headMap($toKey);
+	function lastKey();
+	function subMap($fromKey, $toKey);
+	function tailMap($fromKey);
 }
 
 abstract class AbstractCollection implements Collection {
@@ -901,6 +915,9 @@ class MapIterator implements Iterator {
 }
 
 abstract class AbstractMap implements Map {
+	
+	private static $HASH_SIGNATURE = 32;
+	
 	public function putAll(Map $m) {
 		foreach ($m as $key => $value) {
 			$this->put($key, $value);
@@ -920,7 +937,7 @@ abstract class AbstractMap implements Map {
 	public function hashCode() {
 		$hashCode = '';
 		foreach ($this as $key => $value) {
-			$hashCode .= '32' . Hasher::hash($key) . '=>' . Hasher::hash($value);
+			$hashCode .= self::$HASH_SIGNATURE . Hasher::hash($key) . '=>' . Hasher::hash($value);
 		}
 		return md5($hashCode);
 	}
@@ -928,8 +945,8 @@ abstract class AbstractMap implements Map {
 
 /** @gwtname java.util.HashMap */
 class HashMap extends AbstractMap {
-	private $values = array();
-	private $keys = array();
+	protected $values = array();
+	protected $keys = array();
 	private $hashFunc;
 	
 	public function __construct($from = null, $hashFunc = null) {
@@ -953,7 +970,7 @@ class HashMap extends AbstractMap {
 		}
 	}
 	
-	private function hash($x) {
+	protected function hash($x) {
 		$func = $this->hashFunc;
 		return Hasher::$func($x);
 	}
@@ -1043,17 +1060,76 @@ class HashMap extends AbstractMap {
 }
 
 /** @gwtname java.util.TreeMap */
-class TreeMap extends HashMap {}
+class TreeMap extends HashMap {
+
+	private $comparator;
+	
+	public function __construct($from = null, $comparator = null, $hashFunc = null) {
+		$this->comparator = $comparator;
+		parent::__construct($from, $hashFunc);
+	}
+	
+	public function put($key, $value) {
+		$res = parent::put($key, $value);
+		$this->sort();
+		return $res;
+	}
+	
+	public function comparator() {
+		return $this->comparator;
+	}
+	
+	public function firstKey() {
+		if ($this->isEmpty()) {
+			throw new NoSuchElementException();
+		}
+		reset($this->keys);
+		return current($this->keys);
+	}
+	
+	public function headMap($toKey) {
+		//TODO
+	}
+	
+	public function lastKey() {
+		if ($this->isEmpty()) {
+			throw new NoSuchElementException();
+		}
+		end($this->keys);
+		return current($this->keys);
+	}
+	
+	public function subMap($fromKey, $toKey) {
+		//TODO
+	}
+	
+	public function tailMap($fromKey) {
+		//TODO
+	}
+	
+	private function sort() {
+		if (!is_null($this->comparator)) {
+			uasort($this->keys, $this->comparator);
+		}
+	}
+
+}
 
 /** @gwtname java.util.IdentityHashMap */
 class IdentityHashMap extends HashMap {}
 
+/**
+ * @deprecated
+ */
 class ObjectMap extends HashMap {
 	public function __construct($from = null) {
 		parent::__construct($from, 'hashObject');
 	}
 }
 
+/**
+ * @deprecated
+ */
 class HybridMap extends HashMap {
 }
 
@@ -1363,7 +1439,7 @@ class JavaLikeIteratorImpl implements JavaLikeIterator {
 
 class Collections {
 	
-	public static function sort(GenericList $list, $func = '') {
+	public static function sort(GenericList $list, $func = null) {
 		if (empty($func)) {
 			return sort($list->toArray());
 		}

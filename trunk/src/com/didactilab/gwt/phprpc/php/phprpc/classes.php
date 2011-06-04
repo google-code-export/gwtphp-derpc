@@ -55,6 +55,8 @@ abstract class Clazz {
 	public abstract function getMethod($methodName);
 	public abstract function hasMethod($methodName);
 	
+	public abstract function getConstructor();
+	
 	public abstract function newInstance();
 	
 	public function getEnclosingClass() {
@@ -85,6 +87,10 @@ abstract class Clazz {
 		return null;
 	}
 	
+	public function getEnumValues() {
+		return array();
+	}
+	
 	public function isInterface() {
 		return false;
 	}
@@ -110,6 +116,10 @@ abstract class Clazz {
 	
 	public function subClassOf(Clazz $clazz) {
 		return false;
+	}
+	
+	public static function clazz() {
+		return Classes::classOf(get_called_class());
 	}
 }
 
@@ -153,6 +163,10 @@ class JavaClazz extends Clazz {
 	
 	public function hasMethod($methodName) {
 		return false;
+	}
+	
+	public function getConstructor() {
+		return null;
 	}
 	
 	public function hasField($fieldName) {
@@ -250,6 +264,10 @@ class AliasClass extends Clazz {
 		return $this->clazz->hasMethod($methodName);
 	}
 	
+	public function getConstructor() {
+		return $this->clazz->getConstructor();
+	}
+	
 	public function newInstance() {
 		return $this->clazz->newInstance();
 	}
@@ -280,6 +298,10 @@ class AliasClass extends Clazz {
 	
 	public function getConstantNameByValue($value) {
 		return $this->clazz->getConstantNameByValue($value);
+	}
+	
+	public function getEnumValues() {
+		return $this->clazz->getEnumValues();
 	}
 	
 	public function isInterface() {
@@ -317,6 +339,7 @@ class PhpClazz extends Clazz {
 	private $reflect;
 	private $fields = array();
 	private $methods = array();
+	private $constructor = null;
 	
 	private $gwtname = '';
 	private $enclosing = null;
@@ -421,6 +444,13 @@ class PhpClazz extends Clazz {
 		return method_exists($this->name, $methodName);
 	}
 	
+	public function getConstructor() {
+		if (is_null($this->constructor)) {
+			$this->constructor = new PhpConstructor($this, $this->reflect->getConstructor());
+		}
+		return $this->constructor;
+	}
+	
 	public function getSuperClass() {
 		return Classes::classOf(get_parent_class($this->name));
 	}
@@ -459,6 +489,10 @@ class PhpClazz extends Clazz {
 		}
 	}
 	
+	public function getEnumValues() {
+		return array_values($this->reflect->getConstants());
+	}
+	
 	public function isAssignableFrom(Clazz $clazz) {
 		return ($clazz == $this) ||
 			($clazz->implementsInterface($this)) ||
@@ -486,6 +520,10 @@ class PhpClazz extends Clazz {
 	public function subClassOf(Clazz $clazz) {
 		return $this->reflect->isSubclassOf($clazz->getName());
 	}
+}
+
+class PhpEnumClazz extends PhpClazz {
+	
 }
 
 class MagicClazz extends PhpClazz {
@@ -536,6 +574,12 @@ abstract class Field {
 	
 	public abstract function isStatic();
 	public abstract function isTransient();
+	public abstract function isPrivate();
+	public abstract function isProtected();
+	public abstract function isPublic();
+	
+	public abstract function setAccessible($accessible); 
+	public abstract function isAccessible();
 }
 
 class PhpField extends Field {
@@ -604,6 +648,26 @@ class PhpField extends Field {
 	
 	public function isTransient() {
 		return $this->transient;
+	}
+	
+	public function isPrivate() {
+		return $this->reflect->isPrivate();
+	}
+	
+	public function isProtected() {
+		return $this->reflect->isProtected();
+	}
+	
+	public function isPublic() {
+		return $this->reflect->isPublic();
+	}
+	
+	public function setAccessible($accessible) {
+		$this->reflect->setAccessible($accessible);
+	}
+	
+	public function isAccessible() {
+		return $this->reflect->isPrivate() || $this->reflect->isProtected();
 	}
 }
 
@@ -719,6 +783,71 @@ class PhpMethod extends Method {
 	
 }
 
+abstract class Constructor {
+	protected $clazz;
+	
+	public function __construct(Clazz $clazz) {
+		$this->clazz = $clazz;
+	}
+	
+	public function getDeclaringClass() {
+		return $this->clazz;
+	}
+	
+	public abstract function newInstance();
+	public abstract function newInstanceArgs();
+	
+	public abstract function isPrivate();
+	public abstract function isProtected();
+	public abstract function isPublic();
+	
+	public abstract function isAccessible();
+	public abstract function setAccessible($accessible);
+	
+	public function __toString() {
+		return $this->clazz->getName() . '__construct()';
+	}
+}
+
+class PhpConstructor extends Constructor {
+	
+	private $reflect;
+	
+	public function __construct(Clazz $clazz, ReflectionMethod $constructor) {
+		parent::__construct($clazz);
+		$this->reflect = $constructor;
+	}
+	
+	public function newInstance() {
+		return $this->reflect->invokeArgs(null, func_get_args());
+	}
+	
+	public function newInstanceArgs() {
+		return $this->reflect->invokeArgs(null, func_get_arg(0));
+	}
+	
+	public function isAccessible() {
+		return $this->reflect->isPrivate() || $this->reflect->isProtected();
+	}
+	
+	public function setAccessible($accessible) {
+		$this->reflect->setAccessible($accessible);
+	}
+	
+	public function isPrivate() {
+		return $this->reflect->isPrivate();
+	}
+	
+	public function isProtected() {
+		return $this->reflect->isProtected();
+	}
+	
+	public function isPublic() {
+		return $this->reflect->isPublic();
+	}
+	
+}
+
 /** @gwtname java.lang.Object */
 class Object extends JavaType {
 	const CLASSNAME = 'java.lang.Object';
@@ -778,7 +907,14 @@ class Byte extends JavaPrimitiveType {
 	const CLASSNAME = 'java.lang.Byte';
 	const SIGNATURE = 'B';
 	
+	const MIN_VALUE = -128;
+	const MAX_VALUE = 127;
+	
 	public static function valueOf($value) {
+		return (int) $value;
+	}
+	
+	public static function parseByte($value) {
 		return (int) $value;
 	}
 	
@@ -813,6 +949,10 @@ class Character extends JavaPrimitiveType {
 		return $ord;
 	}
 	
+	public static function isDigit($char) {
+		return ctype_digit($char);
+	}
+	
 }
 
 /** @gwtname java.lang.Double */
@@ -823,6 +963,10 @@ class Double extends JavaPrimitiveType {
 	const SIGNATURE = 'D';
 	
 	public static function valueOf($value) {
+		return (double) $value;
+	}
+	
+	public static function parseDouble($value) {
 		return (double) $value;
 	}
 	
@@ -848,8 +992,19 @@ class Integer extends JavaPrimitiveType {
 	const CLASSNAME = 'java.lang.Integer';
 	const SIGNATURE = 'I';
 	
+	const MIN_VALUE = -2147483648;
+	const MAX_VALUE = 2147483647;
+	
 	public static function valueOf($value) {
 		return (int) $value;
+	}
+	
+	public static function parseInt($value) {
+		return (int) $value;
+	}
+	
+	public static function parseHex($value) {
+		return hexdec($value);
 	}
 	
 	public static function toString($value, $radix) {
@@ -876,6 +1031,10 @@ class Long extends JavaPrimitiveType {
 		return sprintf('%.0f', $value);
 	}
 	
+	public static function toString($value) {
+		return sprintf('%.0f', $value);
+	}
+	
 	public function __toString() {
 		return self::toLongString($this->value());
 	}
@@ -889,7 +1048,14 @@ class Short extends JavaPrimitiveType {
 	const CLASSNAME = 'java.lang.Short';
 	const SIGNATURE = 'S';
 	
+	const MIN_SHORT = -32768;
+	const MAX_SHORT = 32767;
+	
 	public static function valueOf($value) {
+		return (int) $value;
+	}
+	
+	public static function parseShort($value) {
 		return (int) $value;
 	}
 	
@@ -1178,7 +1344,12 @@ class Classes {
 		if (!self::exists($className)) {
 			$clazz = null;
 			try {
-				$clazz = new PhpClazz($className);
+				if (self::isEnumClass($className)) {
+					$clazz = new PhpEnumClazz();
+				}
+				else {
+					$clazz = new PhpClazz($className);
+				}
 			}
 			catch (Exception $e) {
 				throw new ClassNotFoundException('Class not found [' . $className . ']');
@@ -1204,6 +1375,10 @@ class Classes {
 		}
 		
 		return $className;
+	}
+	
+	private static function isEnumClass($className) {
+		return $className instanceof Enum;
 	}
 	
 	private static function isArrayClassName($className) {
@@ -1301,4 +1476,7 @@ class NoSuchFieldException extends ClassException {
 }
 
 class NotImplemented extends Exception {
+}
+
+class NumberFormatException extends Exception {
 }

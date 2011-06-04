@@ -314,7 +314,7 @@ class ThrowCommand extends RpcCommand implements HasValues {
 	private $toThrow;
 
 	public function addValue(ValueCommand $value) {
-		assert($toThrow == null);
+		assert(is_null($this->toThrow));
 		$this->toThrow = $value;
 	}
 
