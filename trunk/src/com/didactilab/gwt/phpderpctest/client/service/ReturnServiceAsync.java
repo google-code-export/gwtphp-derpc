@@ -23,38 +23,21 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public interface ReturnServiceAsync {
 
 	void boolTrueReturn(AsyncCallback<Boolean> callback);
-	
 	void boolFalseReturn(AsyncCallback<Boolean> callback);
-
 	void byteReturn(AsyncCallback<Byte> callback);
-
 	void charReturn(AsyncCallback<Character> callback);
-	
 	void charUTF8Return(AsyncCallback<Character> callback);
-
 	void doubleReturn(AsyncCallback<Double> callback);
-
 	void enumReturn(AsyncCallback<CustomEnum> callback);
-
 	void floatReturn(AsyncCallback<Float> callback);
-
 	void intReturn(AsyncCallback<Integer> callback);
-
 	void longReturn(AsyncCallback<Long> callback);
-
 	void noReturn(AsyncCallback<Void> callback);
-
 	void objectReturn(AsyncCallback<CustomObject> callback);
-
 	void shortReturn(AsyncCallback<Short> callback);
-
 	void stringReturn(AsyncCallback<String> callback);
-	
 	void stringUTF8Return(AsyncCallback<String> callback);
-
 	void intArrayReturn(AsyncCallback<int[][]> callback);
-
 	void stringArrayReturn(AsyncCallback<String[]> callback);
-	
 	void throwReturn(AsyncCallback<Void> callback);
 }

@@ -18,9 +18,14 @@
  */
 package com.didactilab.gwt.phpderpctest.client.returntest;
 
+import com.didactilab.gwt.phpderpctest.client.unittest.TestConnector;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class StringUTF8ReturnTest extends ReturnTestCase {
+
+	public StringUTF8ReturnTest(TestConnector<ReturnServiceImpl> connector) {
+		super(connector);
+	}
 
 	@Override
 	protected void execute() {

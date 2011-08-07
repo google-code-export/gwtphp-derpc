@@ -20,9 +20,14 @@ package com.didactilab.gwt.phpderpctest.client.objecttest;
 
 import java.util.HashSet;
 
+import com.didactilab.gwt.phpderpctest.client.unittest.TestConnector;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class HashSetCallTest extends ObjectTestCase {
+
+	public HashSetCallTest(TestConnector<ObjectServiceImpl> connector) {
+		super(connector);
+	}
 
 	@Override
 	protected void execute() {

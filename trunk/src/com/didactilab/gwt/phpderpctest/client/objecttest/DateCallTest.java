@@ -21,9 +21,14 @@ package com.didactilab.gwt.phpderpctest.client.objecttest;
 import java.util.Date;
 import java.util.ArrayList;
 
+import com.didactilab.gwt.phpderpctest.client.unittest.TestConnector;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class DateCallTest extends ObjectTestCase {
+
+	public DateCallTest(TestConnector<ObjectServiceImpl> connector) {
+		super(connector);
+	}
 
 	@SuppressWarnings("deprecation")
 	@Override

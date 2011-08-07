@@ -20,9 +20,14 @@ package com.didactilab.gwt.phpderpctest.client.objecttest;
 
 import java.util.ArrayList;
 
+import com.didactilab.gwt.phpderpctest.client.unittest.TestConnector;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ArrayListCallTest extends ObjectTestCase {
+
+	public ArrayListCallTest(TestConnector<ObjectServiceImpl> connector) {
+		super(connector);
+	}
 
 	@Override
 	protected void execute() {

@@ -18,13 +18,15 @@
  */
 package com.didactilab.gwt.phpderpctest.client.returntest;
 
-import com.didactilab.gwt.phpderpctest.client.service.ReturnService;
-import com.didactilab.gwt.phpderpctest.client.service.ReturnServiceAsync;
 import com.didactilab.gwt.phpderpctest.client.unittest.TestCase;
-import com.google.gwt.core.client.GWT;
+import com.didactilab.gwt.phpderpctest.client.unittest.TestConnector;
 
 public abstract class ReturnTestCase extends TestCase {
-
-	protected static ReturnServiceAsync service = GWT.create(ReturnService.class);
+	
+	protected ReturnServiceImpl service;
+	
+	public ReturnTestCase(TestConnector<ReturnServiceImpl> connector) {
+		service = connector.getConnector();
+	}
 
 }

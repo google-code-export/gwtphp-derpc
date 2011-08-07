@@ -21,9 +21,10 @@
 	<inherits name="com.google.gwt.core.Core" />
 	<inherits name="com.google.gwt.user.RemoteService" />
 	<inherits name="com.google.gwt.rpc.RPC" />
+	<inherits name="com.didactilab.gwt.phprpc.PhpJava" />
 	
 	<source path="client" />
-  	<public path='php' />
+  	<public path='phpderpc' />
   	
   	<!-- 
   		Generate a php model from java service class
@@ -61,7 +62,7 @@
 	<define-linker name="phpLinker" class="com.didactilab.gwt.phprpc.linker.PhpClientOracleLinker" />
 	<add-linker name="phpLinker" />
   	
-  	<generate-with class="com.didactilab.gwt.phprpc.rebind.PhpRpcServiceGenerator">
+  	<generate-with class="com.didactilab.gwt.phprpc.rebind.PhpDerpcServiceGenerator">
     	<when-type-assignable class="com.didactilab.gwt.phprpc.client.PhpService" />
   	</generate-with>
 

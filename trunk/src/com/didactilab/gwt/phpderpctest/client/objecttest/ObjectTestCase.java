@@ -18,13 +18,15 @@
  */
 package com.didactilab.gwt.phpderpctest.client.objecttest;
 
-import com.didactilab.gwt.phpderpctest.client.service.ObjectService;
-import com.didactilab.gwt.phpderpctest.client.service.ObjectServiceAsync;
 import com.didactilab.gwt.phpderpctest.client.unittest.TestCase;
-import com.google.gwt.core.client.GWT;
+import com.didactilab.gwt.phpderpctest.client.unittest.TestConnector;
 
 public abstract class ObjectTestCase extends TestCase {
 
-	protected static ObjectServiceAsync service = GWT.create(ObjectService.class);
+	protected ObjectServiceImpl service;
+	
+	public ObjectTestCase(TestConnector<ObjectServiceImpl> connector) {
+		service = connector.getConnector();
+	}
 
 }

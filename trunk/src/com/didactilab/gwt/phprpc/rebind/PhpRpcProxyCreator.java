@@ -1,35 +1,17 @@
-/*
- * Copyright 2011 DidactiLab SAS
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
- * 
- * Date: 30 avr. 2011
- * Author: Mathieu LIGOCKI
- */
 package com.didactilab.gwt.phprpc.rebind;
 
 import com.didactilab.gwt.phprpc.client.PhpRemoteServiceFilename;
 import com.didactilab.gwt.phprpc.client.PhpRemoteServiceRelativePath;
 import com.google.gwt.core.ext.typeinfo.JClassType;
-import com.google.gwt.rpc.rebind.RpcProxyCreator;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
+import com.google.gwt.user.rebind.rpc.ProxyCreator;
 
-public class PhpRpcProxyCreator extends RpcProxyCreator {
+public class PhpRpcProxyCreator extends ProxyCreator {
 
-	public PhpRpcProxyCreator(JClassType type) {
-		super(type);
+	public PhpRpcProxyCreator(JClassType serviceIntf) {
+		super(serviceIntf);
 	}
-
+	
 	protected String getRemoteServiceRelativePath() {
 		String moduleRelativeURL = getRemoteServiceRelativePath(serviceIntf);
 		if (moduleRelativeURL != null) {
@@ -41,16 +23,6 @@ public class PhpRpcProxyCreator extends RpcProxyCreator {
 			return null;
 		
 		return "\"" + getServiceFilename(relativePath, serviceIntf) + "\"";
-		//return "\"" + relativePath + "/service" + SERVICE_PHP_SCRIPT + "\"";
-		
-		
-		/*String name = getPhpRemoteServiceName(serviceIntf);
-		if (name == null)
-			return null;
-		else {
-			System.out.println("   #service " + name);
-			return "\"" + name + "/" + SERVICE_PHP_SCRIPT + "\"";
-		}*/
 	}
 	
 	static String getServiceFilename(String relativePath, JClassType type) {
