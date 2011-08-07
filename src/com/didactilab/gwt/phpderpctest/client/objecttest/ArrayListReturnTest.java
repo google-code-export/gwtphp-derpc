@@ -21,9 +21,14 @@ package com.didactilab.gwt.phpderpctest.client.objecttest;
 import java.util.ArrayList;
 
 import com.didactilab.gwt.phpderpctest.client.service.CustomObject;
+import com.didactilab.gwt.phpderpctest.client.unittest.TestConnector;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ArrayListReturnTest extends ObjectTestCase {
+
+	public ArrayListReturnTest(TestConnector<ObjectServiceImpl> connector) {
+		super(connector);
+	}
 
 	@Override
 	protected void execute() {

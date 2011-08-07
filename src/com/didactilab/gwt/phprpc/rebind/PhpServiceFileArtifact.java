@@ -27,7 +27,55 @@ import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 
 @SuppressWarnings("serial")
-public class PhpServiceFileArtifact extends PhpFileArtifact {
+public abstract class PhpServiceFileArtifact extends PhpFileArtifact {
+	
+	public static class Rpc extends PhpServiceFileArtifact {
+
+		public Rpc(String serviceName,
+				String partialPath, String serviceFilename) {
+			super(serviceName, partialPath, serviceFilename);
+		}
+
+		@Override
+		protected String getServletFile() {
+			return "rpc/RemoteServiceServlet.php";
+		}
+
+		@Override
+		protected String getServletType() {
+			return "RemoteServiceServlet";
+		}
+
+		@Override
+		protected String getServletParam() {
+			return "new " + getServiceName() + "()";
+		}
+		
+	}
+	
+	public static class DeRpc extends PhpServiceFileArtifact {
+
+		public DeRpc(String serviceName,
+				String partialPath, String serviceFilename) {
+			super(serviceName, partialPath, serviceFilename);
+		}
+
+		@Override
+		protected String getServletFile() {
+			return "derpc/RpcServlet.php";
+		}
+
+		@Override
+		protected String getServletType() {
+			return "RpcServlet";
+		}
+
+		@Override
+		protected String getServletParam() {
+			return "";
+		}
+		
+	}
 	
 	private final String serviceFilename;
 	private HashSet<String> includes = new HashSet<String>();
@@ -83,7 +131,7 @@ public class PhpServiceFileArtifact extends PhpFileArtifact {
 			buffer.append(");\n\n");
 		}
 		
-		buffer.append("require_once PHPRPC_ROOT . 'RpcServlet.php';\n\n");
+		buffer.append("require_once PHPRPC_ROOT . '" + getServletFile() + "';\n\n");
 		buffer.append("require_once '").append(serviceFilename).append("';\n");
 		
 		for (String includedFile : includes) {
@@ -91,7 +139,7 @@ public class PhpServiceFileArtifact extends PhpFileArtifact {
 		}
 		
 		buffer.append("\n");
-		buffer.append("RpcServlet::run();");
+		buffer.append(getServletType() + "::run(" + getServletParam() + ");");
 		
 	}
 	
@@ -101,4 +149,8 @@ public class PhpServiceFileArtifact extends PhpFileArtifact {
 		}
 	}
 
+	protected abstract String getServletFile();
+	protected abstract String getServletType();
+	protected abstract String getServletParam();
+	
 }

@@ -19,9 +19,14 @@
 package com.didactilab.gwt.phpderpctest.client.objecttest;
 
 import com.didactilab.gwt.phpderpctest.client.service.CustomObject.CustomSubObject;
+import com.didactilab.gwt.phpderpctest.client.unittest.TestConnector;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class CustomSubObjectReturnTest extends ObjectTestCase {
+
+	public CustomSubObjectReturnTest(TestConnector<ObjectServiceImpl> connector) {
+		super(connector);
+	}
 
 	@Override
 	protected void execute() {

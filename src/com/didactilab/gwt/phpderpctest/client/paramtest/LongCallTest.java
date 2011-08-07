@@ -18,9 +18,14 @@
  */
 package com.didactilab.gwt.phpderpctest.client.paramtest;
 
+import com.didactilab.gwt.phpderpctest.client.unittest.TestConnector;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class LongCallTest extends ParamTestCase {
+
+	public LongCallTest(TestConnector<ParamServiceImpl> connector) {
+		super(connector);
+	}
 
 	@Override
 	protected void execute() {

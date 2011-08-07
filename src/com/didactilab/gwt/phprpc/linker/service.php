@@ -22,6 +22,6 @@ set_include_path(get_include_path() . PATH_SEPARATOR . '../');
 
 require_once '%%PHPRPC%%phprpc/RpcServlet.php';
 
-%%INCLUDES%%
+/*%INCLUDES%*/
 
 RpcServlet::run();

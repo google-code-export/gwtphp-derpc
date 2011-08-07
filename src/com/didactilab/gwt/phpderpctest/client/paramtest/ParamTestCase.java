@@ -18,13 +18,15 @@
  */
 package com.didactilab.gwt.phpderpctest.client.paramtest;
 
-import com.didactilab.gwt.phpderpctest.client.service.ParamService;
-import com.didactilab.gwt.phpderpctest.client.service.ParamServiceAsync;
 import com.didactilab.gwt.phpderpctest.client.unittest.TestCase;
-import com.google.gwt.core.client.GWT;
+import com.didactilab.gwt.phpderpctest.client.unittest.TestConnector;
 
 public abstract class ParamTestCase extends TestCase {
-
-	protected static ParamServiceAsync service = GWT.create(ParamService.class);
+	
+	protected ParamServiceImpl service;
+	
+	public ParamTestCase(TestConnector<ParamServiceImpl> connector) {
+		service = connector.getConnector();
+	}
 
 }
