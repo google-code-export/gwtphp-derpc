@@ -82,6 +82,11 @@ class RpcReturnService implements RemoteService {
 	}
 	
 	/** @return string */
+	public function stringEscapeReturn() {
+		return "Bonjour\nSalut\nHi\tHello";
+	}
+	
+	/** @return string */
 	public function stringUTF8Return() {
 		return 'abc éèçàùîö';
 	}

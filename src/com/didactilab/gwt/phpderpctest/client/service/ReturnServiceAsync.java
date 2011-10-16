@@ -36,6 +36,7 @@ public interface ReturnServiceAsync {
 	void objectReturn(AsyncCallback<CustomObject> callback);
 	void shortReturn(AsyncCallback<Short> callback);
 	void stringReturn(AsyncCallback<String> callback);
+	void stringEscapeReturn(AsyncCallback<String> callback);
 	void stringUTF8Return(AsyncCallback<String> callback);
 	void intArrayReturn(AsyncCallback<int[][]> callback);
 	void stringArrayReturn(AsyncCallback<String[]> callback);

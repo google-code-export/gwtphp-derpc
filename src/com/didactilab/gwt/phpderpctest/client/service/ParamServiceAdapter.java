@@ -94,6 +94,11 @@ public class ParamServiceAdapter implements ParamServiceImpl {
 	public void stringCall(String param, AsyncCallback<Boolean> callback) {
 		service.stringCall(param, callback);
 	}
+	
+	@Override
+	public void stringEscapeCall(String param, AsyncCallback<Boolean> callback) {
+		service.stringEscapeCall(param, callback);
+	}
 
 	@Override
 	public void stringUTF8Call(String param, AsyncCallback<Boolean> callback) {

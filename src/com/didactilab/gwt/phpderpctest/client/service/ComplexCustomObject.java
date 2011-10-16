@@ -31,9 +31,10 @@ public class ComplexCustomObject implements IsSerializable {
 	public long big;
 	public CustomEnum custom;
 	public byte[] bytes;
+	public String escapedString;
 	
 	public boolean isValid() {
-		return (string.equals("salut")) &&
+		return (string != null && string.equals("salut")) &&
 				(number == 5) &&
 				(bool) &&
 				(real == 560.3345) &&
@@ -41,7 +42,8 @@ public class ComplexCustomObject implements IsSerializable {
 				(custom == CustomEnum.HELLO) &&
 				(bytes[0] == 1) &&
 				(bytes[1] == 2) &&
-				(bytes[2] == 3);
+				(bytes[2] == 3) &&
+				(escapedString != null && escapedString.equals("salut\nhello\tbonjour"));
 	}
 	
 	public void fill() {
@@ -52,13 +54,14 @@ public class ComplexCustomObject implements IsSerializable {
 		big = 6000000000l;
 		custom = CustomEnum.HELLO;
 		bytes = new byte[] {1, 2, 3};
+		escapedString = "salut\nhello\tbonjour";
 	}
 	
 	@Override
 	public String toString() {
 		return "[ComplexCustomObject number=" + number + " string=\"" + string + 
 				"\" bool=" + bool + " real=" + real + " big=" + big + " custom=" + custom.toString() +
-				" bytes=[" + bytes[0] + " " + bytes[1] + " " + bytes[2] + "]]";
+				" bytes=[" + bytes[0] + " " + bytes[1] + " " + bytes[2] + "] escapedString=" + escapedString + "]";
 	}
 	
 }

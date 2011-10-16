@@ -50,6 +50,8 @@ public interface RpcReturnServiceAsync {
 
 	void stringReturn(AsyncCallback<String> callback);
 	
+	void stringEscapeReturn(AsyncCallback<String> callback);
+	
 	void stringUTF8Return(AsyncCallback<String> callback);
 
 	void intArrayReturn(AsyncCallback<int[][]> callback);

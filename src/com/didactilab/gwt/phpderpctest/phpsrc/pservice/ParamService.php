@@ -79,6 +79,11 @@ class ParamService implements RemoteService {
 	}
 	
 	/** @return boolean */
+	public function stringEscapeCall($param) {
+		return ($param == "Hello\nSalut\nGuten tag\tGood morning");
+	}
+	
+	/** @return boolean */
 	public function stringUTF8Call($param) {
 		return ($param == 'abc éèçàùîö');
 	}

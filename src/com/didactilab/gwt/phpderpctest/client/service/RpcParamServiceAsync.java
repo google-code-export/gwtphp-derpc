@@ -51,6 +51,8 @@ public interface RpcParamServiceAsync {
 	void stringArrayCall(String[] param, AsyncCallback<Boolean> callback);
 
 	void stringCall(String param, AsyncCallback<Boolean> callback);
+	
+	void stringEscapeCall(String param, AsyncCallback<Boolean> callback);
 
 	void stringUTF8Call(String param, AsyncCallback<Boolean> callback);
 

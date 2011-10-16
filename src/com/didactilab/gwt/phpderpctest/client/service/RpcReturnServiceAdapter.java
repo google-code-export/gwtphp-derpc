@@ -87,6 +87,11 @@ public class RpcReturnServiceAdapter implements ReturnServiceImpl {
 	public void stringReturn(AsyncCallback<String> callback) {
 		service.stringReturn(callback);
 	}
+	
+	@Override
+	public void stringEscapeReturn(AsyncCallback<String> callback) {
+		service.stringEscapeReturn(callback);	
+	}
 
 	@Override
 	public void stringUTF8Return(AsyncCallback<String> callback) {

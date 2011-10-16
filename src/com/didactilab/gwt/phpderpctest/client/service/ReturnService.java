@@ -36,6 +36,7 @@ public interface ReturnService extends PhpService {
 	long longReturn();
 	short shortReturn();
 	String stringReturn();
+	String stringEscapeReturn();
 	String stringUTF8Return();
 	CustomObject objectReturn();
 	CustomEnum enumReturn();

@@ -35,6 +35,7 @@ public interface ParamService extends PhpService {
 	boolean longCall(long param);
 	boolean shortCall(short param);
 	boolean stringCall(String param);
+	boolean stringEscapeCall(String param);
 	boolean stringUTF8Call(String param);
 	boolean objectCall(CustomObject param);
 	boolean enumCall(CustomEnum param);

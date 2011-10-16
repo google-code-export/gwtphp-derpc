@@ -57,6 +57,7 @@ import com.didactilab.gwt.phpderpctest.client.paramtest.ShortCallTest;
 import com.didactilab.gwt.phpderpctest.client.paramtest.ShortObjectCallTest;
 import com.didactilab.gwt.phpderpctest.client.paramtest.StringArrayCallTest;
 import com.didactilab.gwt.phpderpctest.client.paramtest.StringCallTest;
+import com.didactilab.gwt.phpderpctest.client.paramtest.StringEscapeCallTest;
 import com.didactilab.gwt.phpderpctest.client.paramtest.StringUTF8CallTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.BoolFalseReturnTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.BoolTrueReturnTest;
@@ -74,6 +75,7 @@ import com.didactilab.gwt.phpderpctest.client.returntest.ObjectReturnTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.ReturnServiceImpl;
 import com.didactilab.gwt.phpderpctest.client.returntest.ShortReturnTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.StringArrayReturnTest;
+import com.didactilab.gwt.phpderpctest.client.returntest.StringEscapeReturnTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.StringReturnTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.StringUTF8ReturnTest;
 import com.didactilab.gwt.phpderpctest.client.service.ObjectServiceAdapter;
@@ -135,6 +137,7 @@ public class MainTest implements EntryPoint {
 		bench.add(new LongReturnTest(connector));
 		bench.add(new ShortReturnTest(connector));
 		bench.add(new StringReturnTest(connector));
+		bench.add(new StringEscapeReturnTest(connector));
 		bench.add(new StringUTF8ReturnTest(connector));
 		bench.add(new ObjectReturnTest(connector));
 		bench.add(new EnumReturnTest(connector));
@@ -158,6 +161,7 @@ public class MainTest implements EntryPoint {
 		bench.add(new ShortCallTest(connector));
 		bench.add(new StringArrayCallTest(connector));
 		bench.add(new StringCallTest(connector));
+		bench.add(new StringEscapeCallTest(connector));
 		bench.add(new StringUTF8CallTest(connector));
 		bench.addSeparator();
 		

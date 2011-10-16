@@ -89,6 +89,11 @@ public class ReturnServiceAdapter implements ReturnServiceImpl {
 	}
 
 	@Override
+	public void stringEscapeReturn(AsyncCallback<String> callback) {
+		service.stringEscapeReturn(callback);
+	}
+	
+	@Override
 	public void stringUTF8Return(AsyncCallback<String> callback) {
 		service.stringUTF8Return(callback);
 	}

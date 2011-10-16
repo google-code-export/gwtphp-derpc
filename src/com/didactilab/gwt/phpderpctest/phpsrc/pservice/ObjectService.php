@@ -107,6 +107,7 @@ class ObjectService implements RemoteService {
 		$obj->big = 6000000000;
 		$obj->custom = CustomEnum::HELLO;
 		$obj->bytes = array(1, 2, 3);
+		$obj->escapedString = "salut\nhello\tbonjour";
 	}
 	
 	public static function isValidComplexCustomObject($obj) {
@@ -118,7 +119,8 @@ class ObjectService implements RemoteService {
 				($obj->custom == CustomEnum::HELLO) &&
 				($obj->bytes[0] == 1) &&
 				($obj->bytes[1] == 2) &&
-				($obj->bytes[2] == 3);
+				($obj->bytes[2] == 3) &&
+				($obj->escapedString === "salut\nhello\tbonjour");
 	}
 	
 	/** @return boolean */
