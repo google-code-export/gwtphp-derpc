@@ -21,24 +21,26 @@
 require_once PHPRPC_ROOT . 'derpc/SerializationStreamWriter.php';
 
 class EscapeUtil {
-	const JS_ESCAPE_CHAR = '\\';
+	const JS_ESCAPE_CHAR = "\\";
 	const JS_QUOTE_CHAR = '"';
-	const NON_BREAKING_HYPHEN = '\x20\x11';
+	const NON_BREAKING_HYPHEN = "x20\x11";
 	
 	const NUMBER_OF_JS_ESCAPED_CHARS = 128;
+	
+	const CHAR_ASCII_ALPHANUM_LOW = 32;
+	const CHAR_ASCII_ALPHANUM_HIGH = 126;
 	
 	private static $JS_CHARS_ESCAPED = array();
 	
 	public static function init() {
 		self::$JS_CHARS_ESCAPED = array_fill(0, self::NUMBER_OF_JS_ESCAPED_CHARS, '');
 		
-		self::$JS_CHARS_ESCAPED[uniord('\x00\xx')] = '0';
+		self::$JS_CHARS_ESCAPED[0] = '0';
 		self::$JS_CHARS_ESCAPED[ord("\b")] = 'b';
 		self::$JS_CHARS_ESCAPED[ord("\t")] = 't';
 		self::$JS_CHARS_ESCAPED[ord("\n")] = 'n';
 		self::$JS_CHARS_ESCAPED[ord("\f")] = 'f';
 		self::$JS_CHARS_ESCAPED[ord("\r")] = 'r';
-		self::$JS_CHARS_ESCAPED[ord("\b")] = 'b';
 		self::$JS_CHARS_ESCAPED[ord(self::JS_ESCAPE_CHAR)] = self::JS_ESCAPE_CHAR;
 		self::$JS_CHARS_ESCAPED[ord(self::JS_QUOTE_CHAR)] = self::JS_QUOTE_CHAR;
 		
@@ -52,12 +54,13 @@ class EscapeUtil {
 
 	private static function escapeString($toEscape) {
 		$out = '"';
-		for ($i=0, $n=mb_strlen($toEscape); $i < $n; ++$i) {
+		for ($i=0, $n=mb_strlen($toEscape); $i < $n; $i++) {
 			$c = mb_substr($toEscape, $i, 1);
-			if (self::needsUnicodeEscape($c))
-			$out .= self::unicodeEscape($c);
-			else
-			$out .= $c;
+			if (self::needsUnicodeEscape($c)) {
+				$out .= self::unicodeEscape($c);
+			} else {
+				$out .= $c;
+			}
 		}
 
 		$out .= '"';
@@ -77,8 +80,21 @@ class EscapeUtil {
 			case self::NON_BREAKING_HYPHEN:
 				// This can be expanded into a break followed by a hyphen
 				return true;
+			case "\b":
+			case "\t":
+			case "\n":
+			case "\f":
+			case "\r":
+				return true;
 			default:
-				break;
+				if (self::isAlphaNum($ch)) {
+					return false;
+				}
+				$res = preg_match('/(\p{Mc}|\p{Me}|\p{Mn}|\p{Cn}|\p{Co}|\p{Zs}|\p{Cc}|\p{Zl}|\p{Cf}|\p{Zp}|\p{Cs})/', $ch);
+				if ($res != 0) {
+					return true;
+				}
+				// Search 
 				/*default:
 				 switch (Character.getType(ch)) {
 					// Conservative
@@ -108,7 +124,7 @@ class EscapeUtil {
 	private static function unicodeEscape($ch) {
 		$out = self::JS_ESCAPE_CHAR;
 		$chord = uniord($ch);
-		if ($chord < self::NUMBER_OF_JS_ESCAPED_CHARS && self::$JS_CHARS_ESCAPED[$chord] != '') {
+		if ($chord < self::NUMBER_OF_JS_ESCAPED_CHARS && !empty(self::$JS_CHARS_ESCAPED[$chord])) {
 			$out .= self::$JS_CHARS_ESCAPED[$chord];
 		}
 		else if ($chord < 256) {
@@ -118,6 +134,22 @@ class EscapeUtil {
 			$out .= 'u' . str_pad(dechex($chord), 4, '0', STR_PAD_LEFT);
 		}
 		return $out;
+	}
+	
+	private static function isAlphaNum($ch) {
+		$ord = ord($ch);
+		return $ord >= self::CHAR_ASCII_ALPHANUM_LOW && $ord <= self::CHAR_ASCII_ALPHANUM_HIGH;
+	}
+	
+	private static function isLetter($ch) {
+		$ord = ord($ch);
+		return ($ord >= ord('a') && $ord <= ord('z')) ||
+			   ($ord >= ord('A') && $ord <= ord('Z'));
+	}
+	
+	private static function isDigit($ch) {
+		$ord = ord($ch);
+		return $ord >= ord('0') && $ord <= ord('9');
 	}
 
 }
