@@ -20,8 +20,14 @@
 
 class GWT {
 	
+	const X_GWT_MODULE_BASE = 'HTTP_X_GWT_MODULE_BASE';
+	
 	public static function getModuleBasePath() {
 		return GWT_MODULE_BASE_PATH;
+	}
+	
+	public static function getModuleWebBasePath() {
+		return $_SERVER[self::X_GWT_MODULE_BASE];
 	}
 	
 	public static function getPhpRpcBasePath() {
