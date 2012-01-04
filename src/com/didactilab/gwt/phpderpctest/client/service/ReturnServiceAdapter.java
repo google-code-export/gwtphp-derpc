@@ -113,4 +113,14 @@ public class ReturnServiceAdapter implements ReturnServiceImpl {
 		service.throwReturn(callback);
 	}
 
+	@Override
+	public void objectsReturn(AsyncCallback<CustomObject[]> callback) {
+		service.objectsReturn(callback);
+	}
+
+	@Override
+	public void noObjectsReturn(AsyncCallback<CustomObject[]> callback) {
+		service.noObjectsReturn(callback);
+	}
+
 }

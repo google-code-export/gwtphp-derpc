@@ -16,22 +16,21 @@
  * Date: 30 avr. 2011
  * Author: Mathieu LIGOCKI
  */
-package com.didactilab.gwt.phprpc.rebind;
+package com.didactilab.gwt.phprpc.rebind.phpgen;
 
+import com.didactilab.gwt.phprpc.rebind.PhpTools;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
+import com.google.gwt.core.ext.typeinfo.JClassType;
 
 public abstract class PhpType {
 	
-	private String name;
+	private final JClassType javaType;
+	private final String name;
 	
-	public PhpType(String name) {
-		this.name = name;
-	}
-	
-	@Override
-	public int hashCode() {
-		return name.hashCode();
+	public PhpType(JClassType javaType) {
+		this.javaType = javaType;
+		this.name = javaType.getQualifiedSourceName();
 	}
 	
 	@Override
@@ -40,15 +39,27 @@ public abstract class PhpType {
 			return false;
 		return name.equals(((PhpType) o).name);
 	}
-
-	protected abstract void getContents(TreeLogger logger, StringBuffer buffer) 
-		throws UnableToCompleteException;
-
 	
+	public String getDefaultFilename() {
+		return PhpTools.typeToString(javaType, true);
+	}
+
 	public String getSource(TreeLogger logger) throws UnableToCompleteException {
 		StringBuffer buffer = new StringBuffer();
 		getContents(logger, buffer);
 		return buffer.toString();
 	}
+	
+	public JClassType getJavaType() {
+		return javaType;
+	}
+
+	@Override
+	public int hashCode() {
+		return name.hashCode();
+	}
+	
+	protected abstract void getContents(TreeLogger logger, StringBuffer buffer) 
+		throws UnableToCompleteException;
 
 }

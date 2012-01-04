@@ -89,4 +89,9 @@ public class RpcObjectServiceAdapter implements ObjectServiceImpl {
 		service.customSubObjectReturn(callback);
 	}
 
+	@Override
+	public void arrayObjectEmptyReturn(AsyncCallback<CustomArrayObject> callback) {
+		service.arrayObjectEmptyReturn(callback);
+	}
+
 }

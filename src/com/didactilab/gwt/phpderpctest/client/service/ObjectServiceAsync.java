@@ -52,4 +52,6 @@ public interface ObjectServiceAsync {
 	
 	void customSubObjectReturn(AsyncCallback<CustomSubObject> callback);
 	
+	void arrayObjectEmptyReturn(AsyncCallback<CustomArrayObject> callback);
+	
 }

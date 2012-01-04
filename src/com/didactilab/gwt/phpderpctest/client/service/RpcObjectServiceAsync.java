@@ -52,4 +52,6 @@ public interface RpcObjectServiceAsync {
 	
 	void customSubObjectReturn(AsyncCallback<CustomSubObject> callback);
 	
+	void arrayObjectEmptyReturn(AsyncCallback<CustomArrayObject> callback);
+	
 }

@@ -16,50 +16,35 @@
  * Date: 30 avr. 2011
  * Author: Mathieu LIGOCKI
  */
-package com.didactilab.gwt.phprpc.rebind;
+package com.didactilab.gwt.phprpc.rebind.phpgen;
 
+import com.didactilab.gwt.phprpc.rebind.PhpTools;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
-import com.google.gwt.core.ext.typeinfo.JClassType;
-import com.google.gwt.core.ext.typeinfo.JField;
+import com.google.gwt.core.ext.typeinfo.JEnumConstant;
+import com.google.gwt.core.ext.typeinfo.JEnumType;
 
-public class PhpClass extends PhpType {
+public class PhpEnum extends PhpType {
 
-	private JClassType type;
-	private boolean serializable;
-	
-	public PhpClass(JClassType type, boolean serializable) {
-		super(type.getQualifiedSourceName());
-		this.type = type;
-		this.serializable = serializable;
+	public PhpEnum(JEnumType type) {
+		super(type);
 	}
-	
+
 	@Override
 	protected void getContents(TreeLogger logger, StringBuffer buffer)
 			throws UnableToCompleteException {
+		JEnumType type = getJavaType().isEnum();
 		buffer.append("/**\n");
 		buffer.append(" * @gwtname ").append(type.getQualifiedBinaryName()).append("\n");
 		if (type.getEnclosingType() != null) {
 			buffer.append(" * @enclosing ").append(type.getEnclosingType().getQualifiedBinaryName()).append("\n");
 		}
 		buffer.append(" */\n");
-		buffer.append("class ").append(PhpTools.typeToString(type, true));
-		JClassType superClass = type.getSuperclass();
-		if ((superClass != null) && (!superClass.getQualifiedBinaryName().equals("java.lang.Object"))) {
-			buffer.append(" extends ").append(PhpTools.typeToString(superClass, true));
-		}
-		buffer.append(" implements IsSerializable {\n");
-		if (serializable) {
-			for (JField field : type.getFields()) {
-				if (field.isStatic()) 
-					continue;
-				if (field.isTransient())
-					continue;
-				buffer.append("\t/** @var ").append(PhpTools.typeToString(field.getType(), false)).append(" */\n");
-				buffer.append("\tpublic $").append(field.getName()).append(";\n\n");
-			}
+		buffer.append("class ").append(PhpTools.typeToString(type, true)).append(" extends Enum {\n");
+		for (JEnumConstant constant : type.getEnumConstants()) {
+			buffer.append("\tconst ").append(constant.getName()).append(" = ").append(constant.getOrdinal()).append(";\n");
 		}
 		buffer.append("}\n");
 	}
-
+	
 }

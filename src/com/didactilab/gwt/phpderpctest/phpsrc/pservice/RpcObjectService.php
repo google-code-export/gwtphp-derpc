@@ -135,4 +135,11 @@ class RpcObjectService implements RemoteService {
 		return $obj;
 	}
 	
+	/** @return CustomArrayObject */
+	public function arrayObjectEmptyReturn() {
+		$obj = new CustomArrayObject();
+		$obj->objects = array();
+		return $obj;
+	}
+	
 }

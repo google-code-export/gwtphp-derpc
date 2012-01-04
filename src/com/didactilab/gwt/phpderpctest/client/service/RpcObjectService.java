@@ -51,4 +51,6 @@ public interface RpcObjectService extends PhpRemoteService {
 	boolean customSubObjectCall(CustomSubObject obj);
 	CustomSubObject customSubObjectReturn();
 	
+	CustomArrayObject arrayObjectEmptyReturn();
+	
 }

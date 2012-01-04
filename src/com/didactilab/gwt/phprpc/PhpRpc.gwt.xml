@@ -11,35 +11,35 @@
   	<!-- 
   		Generate a php model from java service class
   	-->
-	<define-configuration-property name="gwt.phprpc.generateServiceModel" is-multi-valued="false" />
-	<set-configuration-property name="gwt.phprpc.generateServiceModel" value="true" />
+	<define-configuration-property name="phprpc.generator.servicemodel" is-multi-valued="false" />
+	<set-configuration-property name="phprpc.generator.servicemodel" value="true" />
 	
 	<!-- 
   		EXPERIMENTAL
   		create only one file containing all types converted to php
   	-->
-	<define-configuration-property name="phprpc.generateUniquePhpTypeFile" is-multi-valued="false" />
-	<set-configuration-property name="phprpc.generateUniquePhpTypeFile" value="false" />
+	<define-configuration-property name="phprpc.generator.phpfiletype" is-multi-valued="false" />
+	<set-configuration-property name="phprpc.generator.phpfiletype" value="by-class" />
 	
 	<!-- 
   		Path(s) to include in all generated service
   	-->
-	<define-configuration-property name="gwt.phprpc.includePaths" is-multi-valued="true" />
+	<define-configuration-property name="phprpc.includepaths" is-multi-valued="true" />
 	
 	<!-- 
 		Exclude pattern or file from generating php file
 	-->
-	<define-configuration-property name="gwt.phprpc.excludeJavaTypeToPhp" is-multi-valued="true" />
-	<extend-configuration-property name="gwt.phprpc.excludeJavaTypeToPhp" value="~java[.].*" />
+	<define-configuration-property name="phprpc.generator.exclude.classes" is-multi-valued="true" />
+	<extend-configuration-property name="phprpc.generator.exclude.classes" value="~java[.].*" />
 	
-	<define-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" is-multi-valued="true" />
-	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.Exception" />
-	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.RuntimeException" />
-	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.ClassNotFoundException" />
-	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.NoSuchMethodException" />
-	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.IllegalArgumentException" />
-	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.IllegalStateException" />
-	<extend-configuration-property name="gwt.phprpc.excludeJavaExceptionToPhp" value="java.lang.NullPointerException" />
+	<define-configuration-property name="phprpc.generator.exclude.exceptions" is-multi-valued="true" />
+	<extend-configuration-property name="phprpc.generator.exclude.exceptions" value="java.lang.Exception" />
+	<extend-configuration-property name="phprpc.generator.exclude.exceptions" value="java.lang.RuntimeException" />
+	<extend-configuration-property name="phprpc.generator.exclude.exceptions" value="java.lang.ClassNotFoundException" />
+	<extend-configuration-property name="phprpc.generator.exclude.exceptions" value="java.lang.NoSuchMethodException" />
+	<extend-configuration-property name="phprpc.generator.exclude.exceptions" value="java.lang.IllegalArgumentException" />
+	<extend-configuration-property name="phprpc.generator.exclude.exceptions" value="java.lang.IllegalStateException" />
+	<extend-configuration-property name="phprpc.generator.exclude.exceptions" value="java.lang.NullPointerException" />
   	
 	<!-- <define-linker name="phpLinker" class="com.didactilab.gwt.phprpc.linker.PhpClientOracleLinker" />
 	<add-linker name="phpLinker" /> -->

@@ -67,6 +67,10 @@ abstract class CommandSerializationStreamWriterBase implements SerializationStre
 		$this->commandSink->accept($this->makeValue(Classes::classOfValue($value), $value));
 	}
 	
+	public function writeObject2(Clazz $clazz, $value) {
+		$this->commandSink->accept($this->makeValue($clazz, $value));
+	}
+	
 	public function writeShort($value)  {
 		$this->commandSink->accept($this->makeValue(Short::typeClass(), $value));
 	}
@@ -136,7 +140,7 @@ abstract class CommandSerializationStreamWriterBase implements SerializationStre
 				$this->writeEnum($clazz, $value);
 			}
 			else {
-				$this->writeObject($value);
+				$this->writeObject2($clazz, $value);
 			}
 		}
 	}

@@ -16,36 +16,31 @@
  * Date: 30 avr. 2011
  * Author: Mathieu LIGOCKI
  */
-package com.didactilab.gwt.phprpc.rebind;
+package com.didactilab.gwt.phprpc.rebind.phpgen;
 
+import com.didactilab.gwt.phprpc.rebind.PhpTools;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
-import com.google.gwt.core.ext.typeinfo.JEnumConstant;
-import com.google.gwt.core.ext.typeinfo.JEnumType;
+import com.google.gwt.core.ext.typeinfo.JClassType;
 
-public class PhpEnum extends PhpType {
+public class PhpException extends PhpType {
 
-	private JEnumType type;
-
-	protected PhpEnum(JEnumType type) {
-		super(type.getQualifiedSourceName());
-		this.type = type;
+	public PhpException(JClassType type) {
+		super(type);
 	}
 
 	@Override
 	protected void getContents(TreeLogger logger, StringBuffer buffer)
 			throws UnableToCompleteException {
+		JClassType type = getJavaType();
 		buffer.append("/**\n");
 		buffer.append(" * @gwtname ").append(type.getQualifiedBinaryName()).append("\n");
 		if (type.getEnclosingType() != null) {
 			buffer.append(" * @enclosing ").append(type.getEnclosingType().getQualifiedBinaryName()).append("\n");
 		}
 		buffer.append(" */\n");
-		buffer.append("class ").append(PhpTools.typeToString(type, true)).append(" extends Enum {\n");
-		for (JEnumConstant constant : type.getEnumConstants()) {
-			buffer.append("\tconst ").append(constant.getName()).append(" = ").append(constant.getOrdinal()).append(";\n");
-		}
+		buffer.append("class ").append(PhpTools.typeToString(type, true)).append(" extends Exception {\n\n");
 		buffer.append("}\n");
 	}
-	
+
 }

@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import com.didactilab.gwt.phpderpctest.client.service.CustomArrayObject;
 import com.didactilab.gwt.phpderpctest.client.service.ComplexCustomObject;
 import com.didactilab.gwt.phpderpctest.client.service.CustomObject;
 import com.didactilab.gwt.phpderpctest.client.service.CustomObject.CustomSubObject;
@@ -35,5 +36,7 @@ public interface ObjectServiceImpl {
 	void customSubObjectCall(CustomSubObject obj, AsyncCallback<Boolean> callback);
 	
 	void customSubObjectReturn(AsyncCallback<CustomSubObject> callback);
+	
+	void arrayObjectEmptyReturn(AsyncCallback<CustomArrayObject> callback);
 	
 }
