@@ -58,5 +58,9 @@ public interface RpcReturnServiceAsync {
 
 	void stringArrayReturn(AsyncCallback<String[]> callback);
 	
+	void objectsReturn(AsyncCallback<CustomObject[]> callback);
+	
+	void noObjectsReturn(AsyncCallback<CustomObject[]> callback);
+	
 	void throwReturn(AsyncCallback<Void> callback);
 }

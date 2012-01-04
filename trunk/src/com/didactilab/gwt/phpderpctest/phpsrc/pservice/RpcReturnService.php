@@ -113,4 +113,20 @@ class RpcReturnService implements RemoteService {
 		return array('hello', 'salut', 'gutentag');
 	}
 	
+	/** @return CustomObject[] */
+	public function objectsReturn() {
+		return array($this->newObject(1), $this->newObject(2), $this->newObject(3));
+	}
+	
+	/** @return CustomObject[] */
+	public function noObjectsReturn() {
+		return array();
+	}
+	
+	private function newObject($nb) {
+		$obj = new CustomObject();
+		$obj->number = $nb;
+		return $obj;
+	}
+	
 }

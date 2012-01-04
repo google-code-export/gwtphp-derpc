@@ -217,6 +217,10 @@ abstract class AbstractSerializationStreamWriter extends AbstractSerializationSt
 		$this->serialize($instance, $typeSignature);
 	}
 	
+	public function writeObject2(Clazz $clazz, $instance) {
+		$this->writeObject($instance);
+	}
+	
 	public function writeTypedObject($instance, Clazz $instanceClass) {
 		if (is_null($instance)) {
 			$this->writeString(null);

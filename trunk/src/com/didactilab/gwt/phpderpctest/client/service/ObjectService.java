@@ -28,6 +28,7 @@ import com.didactilab.gwt.phpderpctest.client.service.CustomObject.CustomSubObje
 import com.didactilab.gwt.phprpc.client.PhpRemoteServiceRelativePath;
 import com.didactilab.gwt.phprpc.client.PhpService;
 import com.didactilab.gwt.phprpc.client.Phpize;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 @PhpRemoteServiceRelativePath("pservice")
 @Phpize(SampleException.class)
@@ -50,5 +51,7 @@ public interface ObjectService extends PhpService {
 	
 	boolean customSubObjectCall(CustomSubObject obj);
 	CustomSubObject customSubObjectReturn();
+	
+	CustomArrayObject arrayObjectEmptyReturn();
 	
 }

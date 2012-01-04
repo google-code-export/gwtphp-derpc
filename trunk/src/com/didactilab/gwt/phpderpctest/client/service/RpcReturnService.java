@@ -42,6 +42,8 @@ public interface RpcReturnService extends PhpRemoteService {
 	CustomEnum enumReturn();
 	int[][] intArrayReturn();
 	String[] stringArrayReturn();
+	CustomObject[] objectsReturn();
+	CustomObject[] noObjectsReturn();
 	
 	void throwReturn() throws CustomException;
 	

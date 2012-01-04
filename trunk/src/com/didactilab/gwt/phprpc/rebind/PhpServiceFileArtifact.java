@@ -18,7 +18,7 @@
  */
 package com.didactilab.gwt.phprpc.rebind;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -78,7 +78,7 @@ public abstract class PhpServiceFileArtifact extends PhpFileArtifact {
 	}
 	
 	private final String serviceFilename;
-	private HashSet<String> includes = new HashSet<String>();
+	private ArrayList<String> includes = new ArrayList<String>();
 	private TreeSet<String> includePaths = new TreeSet<String>();
 	private String moduleRelativePath;
 	
@@ -91,7 +91,9 @@ public abstract class PhpServiceFileArtifact extends PhpFileArtifact {
 	}
 	
 	public void add(String includedFile) {
-		includes.add(includedFile);
+		if (!includes.contains(includedFile)) {
+			includes.add(includedFile);
+		}
 	}
 
 	@Override
@@ -132,11 +134,12 @@ public abstract class PhpServiceFileArtifact extends PhpFileArtifact {
 		}
 		
 		buffer.append("require_once PHPRPC_ROOT . '" + getServletFile() + "';\n\n");
-		buffer.append("require_once '").append(serviceFilename).append("';\n");
 		
 		for (String includedFile : includes) {
 			buffer.append("require_once '").append(includedFile).append("';\n");
 		}
+		
+		buffer.append("require_once '").append(serviceFilename).append("';\n");
 		
 		buffer.append("\n");
 		buffer.append(getServletType() + "::run(" + getServletParam() + ");");

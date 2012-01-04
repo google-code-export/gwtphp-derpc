@@ -18,16 +18,17 @@
  */
 package com.didactilab.gwt.phprpc.rebind;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
+import com.didactilab.gwt.phprpc.rebind.phpgen.PhpType;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 
 @SuppressWarnings("serial")
 public class PhpTypeFileArtifact extends PhpFileArtifact {
 	
-	HashSet<PhpType> sources = new HashSet<PhpType>();
+	ArrayList<PhpType> sources = new ArrayList<PhpType>();
 
 	protected PhpTypeFileArtifact(String serviceName, String partialPath) {
 		super(serviceName, partialPath);

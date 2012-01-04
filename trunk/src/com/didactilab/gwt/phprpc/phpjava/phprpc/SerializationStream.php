@@ -30,4 +30,5 @@ interface SerializationStreamWriter {
 
 	function writeValue(Clazz $clazz, $value);
 	function writeEnum(Clazz $clazz, $value);
+	function writeObject2(Clazz $clazz, $value);
 }

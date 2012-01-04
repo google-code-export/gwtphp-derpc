@@ -20,6 +20,7 @@ package com.didactilab.gwt.phpderpctest.client;
 
 import com.didactilab.gwt.phpderpctest.client.objecttest.ArrayListCallTest;
 import com.didactilab.gwt.phpderpctest.client.objecttest.ArrayListReturnTest;
+import com.didactilab.gwt.phpderpctest.client.objecttest.ArrayObjectEmptyReturnTest;
 import com.didactilab.gwt.phpderpctest.client.objecttest.ComplexCustomObjectCallTest;
 import com.didactilab.gwt.phpderpctest.client.objecttest.ComplexCustomObjectReturnTest;
 import com.didactilab.gwt.phpderpctest.client.objecttest.CustomSubObjectCallTest;
@@ -70,8 +71,10 @@ import com.didactilab.gwt.phpderpctest.client.returntest.FloatReturnTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.IntArrayReturnTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.IntReturnTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.LongReturnTest;
+import com.didactilab.gwt.phpderpctest.client.returntest.NoObjectsReturnTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.NoReturnTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.ObjectReturnTest;
+import com.didactilab.gwt.phpderpctest.client.returntest.ObjectsReturnTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.ReturnServiceImpl;
 import com.didactilab.gwt.phpderpctest.client.returntest.ShortReturnTest;
 import com.didactilab.gwt.phpderpctest.client.returntest.StringArrayReturnTest;
@@ -143,6 +146,9 @@ public class MainTest implements EntryPoint {
 		bench.add(new EnumReturnTest(connector));
 		bench.add(new IntArrayReturnTest(connector));
 		bench.add(new StringArrayReturnTest(connector));
+		bench.add(new ObjectsReturnTest(connector));
+		bench.add(new NoObjectsReturnTest(connector));
+		
 	}
 	
 	private void initParamBench(TestBench bench, TestConnector<ParamServiceImpl> connector) {
@@ -196,6 +202,9 @@ public class MainTest implements EntryPoint {
 		bench.addSeparator();
 		bench.add(new CustomSubObjectCallTest(connector));
 		bench.add(new CustomSubObjectReturnTest(connector));
+		
+		bench.addSeparator();
+		bench.add(new ArrayObjectEmptyReturnTest(connector));
 	}
 
 }
