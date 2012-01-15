@@ -25,6 +25,8 @@ import com.google.gwt.core.ext.typeinfo.JField;
 import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JParameterizedType;
 import com.google.gwt.core.ext.typeinfo.JType;
+import com.google.gwt.core.ext.typeinfo.JTypeParameter;
+import com.google.gwt.core.ext.typeinfo.JWildcardType;
 import com.google.gwt.core.ext.typeinfo.NotFoundException;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.user.client.rpc.IsSerializable;
@@ -110,7 +112,6 @@ public abstract class PhpFilesGenerator {
 			return;
 		}
 		
-		System.out.println("Read properties");
 		readProperties();
 		
 		toExploreTypes.clear();
@@ -118,11 +119,8 @@ public abstract class PhpFilesGenerator {
 		phpizableClasses.clear();
 
 		exploreClass(remoteService, true, true);
-		System.out.println("Do explore...");
 		doExplore();
 		
-		System.out.println("exploring classes ended");
-
 		removeForbiddenConvertableClasses(phpizableClasses);
 
 		// Create PhpServiceArtifact
@@ -161,11 +159,9 @@ public abstract class PhpFilesGenerator {
 
 		Collections.reverse(phpTypes);
 		
-		System.out.println("\nConverted Types :");
-		for (PhpType phpType : phpTypes) {
+		/*for (PhpType phpType : phpTypes) {
 			System.out.println(phpType.getJavaType().getSimpleSourceName());
-		}
-		System.out.println("\n");
+		}*/
 
 		if (phpFileType == PhpFileType.ONE_FILE) {
 			String filename = serviceName + ".types.php";
@@ -210,6 +206,27 @@ public abstract class PhpFilesGenerator {
 			}
 			return;
 		}
+		
+		if (type.isTypeParameter() != null) {
+			JTypeParameter paramType = type.isTypeParameter();
+			for (JClassType classType : paramType.getBounds()) {
+				addToExploreType(classType);
+			}
+			return;
+		}
+		
+		if (type.isWildcard() != null) {
+			JWildcardType wtype = type.isWildcard();
+			addToExploreType(wtype.getBaseType());
+			for (JClassType classType : wtype.getLowerBounds()) {
+				addToExploreType(classType);
+			}
+			for (JClassType classType : wtype.getUpperBounds()) {
+				addToExploreType(classType);
+			}
+			return;
+		}
+		
 		toExploreTypes.add(type);
 	}
 
@@ -217,7 +234,6 @@ public abstract class PhpFilesGenerator {
 		while (!toExploreTypes.isEmpty()) {
 			JType type = toExploreTypes.removeFirst();
 			if (!exploredTypes.contains(type)) {
-				System.out.println("begin exploring type " + type.getSimpleSourceName());
 				exploredTypes.add(type);
 				exploreType(type);
 			}
@@ -239,8 +255,6 @@ public abstract class PhpFilesGenerator {
 	}
 	
 	private void exploreClass(JClassType classType, boolean onlyMethods, boolean exploreException) {
-		System.out.println("Explore class " + classType.getSimpleSourceName());
-		
 		if (!onlyMethods) {
 			exploreParameterizedType2(classType);
 			
@@ -306,8 +320,6 @@ public abstract class PhpFilesGenerator {
 			}
 			return;
 		}*/
-		
-		System.out.println("explore type " + type.getSimpleSourceName());
 		
 		JEnumType enumType = type.isEnum();
 		if (enumType != null) {
