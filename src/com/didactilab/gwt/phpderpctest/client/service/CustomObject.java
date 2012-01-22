@@ -21,12 +21,10 @@ package com.didactilab.gwt.phpderpctest.client.service;
 import com.didactilab.gwt.phprpc.client.ConvertToPhp;
 import com.google.gwt.user.client.rpc.IsSerializable;
 
-@ConvertToPhp
 public class CustomObject implements IsSerializable {
 
 	public int number;
 	
-	@ConvertToPhp
 	public static class CustomSubObject implements IsSerializable {
 		public String name;
 	}
