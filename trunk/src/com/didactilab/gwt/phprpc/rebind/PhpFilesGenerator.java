@@ -5,9 +5,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
 
+import com.didactilab.gwt.phprpc.client.DoNotPhpize;
 import com.didactilab.gwt.phprpc.client.Phpize;
 import com.didactilab.gwt.phprpc.rebind.phpgen.PhpClass;
 import com.didactilab.gwt.phprpc.rebind.phpgen.PhpEnum;
@@ -72,11 +76,17 @@ public abstract class PhpFilesGenerator {
 	private String typeName;
 	
 	private ArrayList<JClassType> phpizableClasses = new ArrayList<JClassType>();
+	
 	private LinkedList<JType> toExploreTypes = new LinkedList<JType>();
+	
 	private HashSet<JType> exploredTypes = new HashSet<JType>();
 
 	private HashSet<String> excludedExceptions = new HashSet<String>();
 	private HashSet<String> excludedClasses = new HashSet<String>();
+	
+	private HashSet<String> exclusionMatchers = new HashSet<String>();
+	private HashSet<String> exclusions = new HashSet<String>();
+	
 	private ArrayList<String> includePaths = new ArrayList<String>();
 	private PhpFileType phpFileType;
 	private boolean generateServiceModel;
@@ -112,16 +122,42 @@ public abstract class PhpFilesGenerator {
 			return;
 		}
 		
+		/*System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+		System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+		System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");*/
+		
 		readProperties();
+		prepareExclusions();
+		
+		verifyDoNotPhpize(remoteService);
 		
 		toExploreTypes.clear();
 		exploredTypes.clear();
 		phpizableClasses.clear();
-
-		exploreClass(remoteService, true, true);
-		doExplore();
 		
-		removeForbiddenConvertableClasses(phpizableClasses);
+		exploreService(remoteService);
+		
+		/*System.out.println("~~~~~~~~BEFORE STEP 1~~~~~~~~~~~~~");
+		debugPrint(toExploreTypes);
+		System.out.println("~~~~~~~~~~~~~~~~~~~~~");*/
+		
+		step1();
+		
+		/*System.out.println("~~~~~~~~~AFTER STEP 1~~~~~~~~~~~~");
+		debugPrint(toExploreTypes);
+		System.out.println("~~~~~~~~~~~~~~~~~~~~~");*/
+		
+		step2();
+		
+		/*System.out.println("~~~~~~~~~~~AFTER STEP 2~~~~~~~~~~");
+		debugPrint(toExploreTypes);
+		System.out.println("~~~~~~~~~~~~~~~~~~~~~");*/
+		
+		step3();
+		
+		/*System.out.println("~~~~~~~~~~~AFTER STEP 3~~~~~~~~~~");
+		debugPrint(phpizableClasses);
+		System.out.println("~~~~~~~~~~~~~~~~~~~~~");*/
 
 		// Create PhpServiceArtifact
 		String serviceName = remoteService.getSimpleSourceName();
@@ -141,9 +177,8 @@ public abstract class PhpFilesGenerator {
 		context.commitArtifact(logger, serviceArtifact);
 
 		serviceArtifact.setIncludePaths(includePaths);
-
+		
 		ArrayList<PhpType> phpTypes = new ArrayList<PhpType>();
-
 		for (JClassType type : phpizableClasses) {
 			PhpType phpType;
 			if (type instanceof JEnumType) {
@@ -156,10 +191,9 @@ public abstract class PhpFilesGenerator {
 			}
 			phpTypes.add(phpType);
 		}
-
-		Collections.reverse(phpTypes);
 		
-		/*for (PhpType phpType : phpTypes) {
+		/*System.out.println("=============");
+		for (PhpType phpType : phpTypes) {
 			System.out.println(phpType.getJavaType().getSimpleSourceName());
 		}*/
 
@@ -192,11 +226,12 @@ public abstract class PhpFilesGenerator {
 		}
 	}
 	
+	@Deprecated
 	private void addToExploreType(JType type) {
 		if (type.isPrimitive() != null) {
 			return;
 		}
-		if (exploredTypes.contains(type)) {
+		if (toExploreTypes.contains(type) || exploredTypes.contains(type)) {
 			return;
 		}
 		if (type.getQualifiedSourceName().startsWith("java.")) {
@@ -227,9 +262,20 @@ public abstract class PhpFilesGenerator {
 			return;
 		}
 		
+		System.out.println("add " + type);
+		
+		if (type.isClassOrInterface() != null) {
+			Set<? extends JClassType> parentSet = ((JClassType) type).getFlattenedSupertypeHierarchy();
+			ArrayList<? extends JClassType> parentList = new ArrayList<JClassType>(parentSet);
+			Collections.reverse(parentList);
+			
+		}
+		
+		
 		toExploreTypes.add(type);
 	}
 
+	@Deprecated
 	private void doExplore() {
 		while (!toExploreTypes.isEmpty()) {
 			JType type = toExploreTypes.removeFirst();
@@ -240,6 +286,7 @@ public abstract class PhpFilesGenerator {
 		}
 	}
 	
+	@Deprecated
 	private boolean existsIn(Collection<String> collection, String ident) {
 		for (String pattern : collection) {
 			if (pattern.startsWith("~")) {
@@ -254,6 +301,162 @@ public abstract class PhpFilesGenerator {
 		return false;
 	}
 	
+	private void exploreService(JClassType classType) {
+		for (JMethod method : classType.getMethods()) {
+			JType returnType = method.getReturnType();
+			
+			addToExploreType2(returnType);
+			for (JType type : method.getParameterTypes()) {
+				addToExploreType2(type);
+			}
+			for (JClassType throwClass : method.getThrows()) {
+				addToExploreType2(throwClass);
+			}
+		}
+	}
+	
+	private void addToExploreType2(JType type) {
+		if (type.isArray() != null) {
+			type = type.getLeafType();
+		}
+		
+		if (type.isPrimitive() != null) {
+			return;
+		}
+		
+		if (toExploreTypes.contains(type)) {
+			return;
+		}
+		
+		if (type.isInterface() != null) {
+			return;
+		}
+		
+		if (isJavaLangType(type)) {
+			return;
+		}
+		
+		if (type.isClass() != null) {
+			Set<? extends JClassType> parentSet = ((JClassType) type).getFlattenedSupertypeHierarchy();
+			ArrayList<? extends JClassType> parentList = new ArrayList<JClassType>(parentSet);
+			for (ListIterator<? extends JClassType> iterator = parentList.listIterator(parentList.size()); iterator.hasPrevious();) {
+				JClassType classType = (JClassType) iterator.previous();
+				if (classType.isInterface() != null) {
+					continue;
+				}
+				if (isJavaLangType(classType)) {
+					continue;
+				}
+				toExploreTypes.add(classType);
+			}
+		} else {
+			toExploreTypes.add(type);
+		}
+	}
+	
+	private void step1() {
+		boolean newType = true;
+		ArrayList<JType> exploring = new ArrayList<JType>();
+		while (newType) {
+			newType = false;
+			exploring.clear();
+			exploring.addAll(toExploreTypes);
+			toExploreTypes.clear();
+			for (JType type : exploring) {
+				if (type.isArray() != null) {
+					// is array
+					addToExploreType2(type.getLeafType());
+					newType = true;
+					//System.out.println("<<<<<< array");
+				} else if (type.isTypeParameter() != null) {
+					JTypeParameter paramType = type.isTypeParameter();
+					for (JClassType classType : paramType.getBounds()) {
+						addToExploreType2(classType);
+						//System.out.println("<<<<<< type parameter");
+						newType = true;
+					}
+				} else if (type.isWildcard() != null) {
+					JWildcardType wtype = type.isWildcard();
+					addToExploreType2(wtype.getBaseType());
+					newType = true;
+					//System.out.println("<<<<<< wildcard");
+					for (JClassType classType : wtype.getLowerBounds()) {
+						addToExploreType2(classType);
+					}
+					for (JClassType classType : wtype.getUpperBounds()) {
+						addToExploreType2(classType);
+					}
+				} else if (type.isParameterized() != null) {
+					JParameterizedType params = type.isParameterized();
+					
+					for (JClassType param : params.getTypeArgs()) {
+						addToExploreType2(param);
+					}
+					
+					toExploreTypes.add(params.getRawType());
+					newType = true;
+					//System.out.println("<<<<<< parametized");
+				} else {
+					toExploreTypes.add(type);
+				}
+			}
+			
+			// Remove all excluded classes
+			for (Iterator<JType> iterator = toExploreTypes.iterator(); iterator.hasNext();) {
+				JType type = (JType) iterator.next();
+				if (isExcluded(type)) {
+					iterator.remove();
+				}
+			}
+		} 
+	}
+	
+	private void step2() {
+		ArrayList<JType> exploring = new ArrayList<JType>(toExploreTypes);
+		toExploreTypes.clear();
+		
+		for (JType type : exploring) {
+			JClassType classType = type.isClass();
+			if (classType != null && classType.isEnum() == null) {
+				explorePhpize(classType);
+				//System.out.println("#### Read class " + classType.getParameterizedQualifiedSourceName());
+				for (JField field : classType.getFields()) {
+					//System.out.println("#### add field " + field.getName() + " >> " + field.getType().getParameterizedQualifiedSourceName());
+					addToExploreType2(field.getType());
+				}
+			}
+			toExploreTypes.add(type);
+		}
+	}
+	
+	private void step3() {
+		step1();
+		
+		HashSet<JClassType> types = new HashSet<JClassType>();
+		for (JType type : toExploreTypes) {
+			JClassType classType = type.isClass();
+			if (classType == null) {
+				System.out.println("ERROR: " + type.getQualifiedSourceName() + " is not a class");
+			} else {
+				if (types.add(classType)) {
+					addPhpizableClass(classType);
+				}
+			}
+		}
+		
+		toExploreTypes.clear();
+	}
+	
+	@Deprecated
+	private boolean isJavaSDKType(JType type) {
+		return type.getQualifiedSourceName().startsWith("java.lang.");
+	}
+	
+	private boolean isJavaLangType(JType type) {
+		return type.getQualifiedSourceName().startsWith("java.lang.");
+	}
+	
+	@Deprecated
 	private void exploreClass(JClassType classType, boolean onlyMethods, boolean exploreException) {
 		if (!onlyMethods) {
 			exploreParameterizedType2(classType);
@@ -262,7 +465,7 @@ public abstract class PhpFilesGenerator {
 			if (superClass != null) {
 				addToExploreType(superClass);
 			}
-
+			
 			JClassType enclose = classType.getEnclosingType();
 			if (enclose != null) {
 				addToExploreType(enclose);
@@ -289,6 +492,7 @@ public abstract class PhpFilesGenerator {
 		explorePhpize(classType);
 	}
 	
+	@Deprecated
 	private void exploreParameterizedType2(JClassType toExplore) {
 		JParameterizedType params = toExplore.isParameterized();
 		if (params != null) {
@@ -298,18 +502,30 @@ public abstract class PhpFilesGenerator {
 		}
 	}
 	
-	private void explorePhpize(JClassType toPhpize) {
-		Phpize phpize = toPhpize.getAnnotation(Phpize.class);
+	private void explorePhpize(JClassType classType) {
+		Phpize phpize = classType.getAnnotation(Phpize.class);
 		if (phpize != null) {
 			for (Class<?> clazz : phpize.value()) {
-				JClassType type = toPhpize.getOracle().findType(clazz.getCanonicalName());
+				JClassType type = classType.getOracle().findType(clazz.getCanonicalName());
 				if (type != null) {
-					addToExploreType(type);
+					addToExploreType2(type);
 				}
 			}
 		}
 	}
 	
+	private void verifyDoNotPhpize(JClassType classType) {
+		DoNotPhpize phpize = classType.getAnnotation(DoNotPhpize.class);
+		if (phpize != null) {
+			for (Class<?> clazz : phpize.value()) {
+				if (clazz != null) {
+					exclusions.add(clazz.getName());
+				}
+			}
+		}
+	}
+	
+	@Deprecated
 	private void exploreType(JType type) {
 		/*if (type.isPrimitive() != null)
 			return;
@@ -357,7 +573,6 @@ public abstract class PhpFilesGenerator {
 		includePaths.clear();
 		excludedClasses.clear();
 		excludedExceptions.clear();
-		
 		try {
 			excludedClasses.addAll(readProperty(PROP_EXCLUDE_CLASSES));
 			excludedExceptions.addAll(readProperty(PROP_EXCLUDE_EXCEPTIONS));
@@ -372,18 +587,68 @@ public abstract class PhpFilesGenerator {
 			throw new UnableToCompleteException();
 		}
 	}
+	
+	private void prepareExclusions() {
+		for (String excludedClass : excludedClasses) {
+			if (excludedClass.startsWith("~")) {
+				String pattern = excludedClass.substring(1);
+				exclusionMatchers.add(pattern);
+			} else {
+				exclusions.add(excludedClass);
+			}
+		}
+		for (String excludedClass : excludedExceptions) {
+			if (excludedClass.startsWith("~")) {
+				String pattern = excludedClass.substring(1);
+				exclusionMatchers.add(pattern);
+			} else {
+				exclusions.add(excludedClass);
+			}
+		}
+		
+		/*System.out.println("Preparation of exclusions :");
+		for (String ex : exclusions) {
+			System.out.println(" - " + ex);
+		}
+		for (String ex : exclusionMatchers) {
+			System.out.println(" ~ " + ex);
+		}*/
+		
+	}
+	
+	private boolean isExcluded(JType type) {
+		String typeName = type.getQualifiedSourceName();
+		if (exclusions.contains(typeName)) {
+			return true;
+		}
+		
+		for (String matcher : exclusionMatchers) {
+			if (typeName.matches(matcher)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
 
 	private List<String> readProperty(String name) throws BadPropertyValueException {
 		ConfigurationProperty prop = context.getPropertyOracle().getConfigurationProperty(name);
 		return prop.getValues();
 	}
 	
+	@Deprecated
 	private void removeForbiddenConvertableClasses(List<JClassType> types) {
 		/*
 		 * Iterator<? extends HasAnnotations> it = types.iterator(); while
 		 * (it.hasNext()) { HasAnnotations type = it.next(); if
 		 * (!type.isAnnotationPresent(ConvertToPhp.class)) it.remove(); }
 		 */
+	}
+	
+	protected void debugPrint(Collection<? extends JType> types) {
+		for (JType type : types) {
+			System.out.println(":: " + type.getParameterizedQualifiedSourceName());
+		}
 	}
 
 }

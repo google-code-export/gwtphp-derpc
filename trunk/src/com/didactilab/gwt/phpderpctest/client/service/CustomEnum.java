@@ -20,7 +20,6 @@ package com.didactilab.gwt.phpderpctest.client.service;
 
 import com.didactilab.gwt.phprpc.client.ConvertToPhp;
 
-@ConvertToPhp
 public enum CustomEnum {
 	SALUT,
 	HELLO,
