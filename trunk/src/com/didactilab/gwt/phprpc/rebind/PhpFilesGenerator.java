@@ -132,19 +132,27 @@ public abstract class PhpFilesGenerator {
 		exploreService(remoteService);
 		
 		/*System.out.println("~~~~~~~~BEFORE STEP 1~~~~~~~~~~~~~");
-		debugPrint(toExploreTypes);
+		debugPrint(exploringTypes);
 		System.out.println("~~~~~~~~~~~~~~~~~~~~~");*/
 		
 		simplify();
 		
 		/*System.out.println("~~~~~~~~~AFTER STEP 1~~~~~~~~~~~~");
-		debugPrint(toExploreTypes);
+		debugPrint(exploringTypes);
 		System.out.println("~~~~~~~~~~~~~~~~~~~~~");*/
 		
-		findFieldsAndAnnotations();
+		boolean hasAdded = true;
+		int count = 0;
+		while (hasAdded && count < 30) {
+			hasAdded = findFieldsAndAnnotations();
+			count++;
+		}
+		if (count == 30) {
+			throw new UnableToCompleteException();
+		}
 		
 		/*System.out.println("~~~~~~~~~~~AFTER STEP 2~~~~~~~~~~");
-		debugPrint(toExploreTypes);
+		debugPrint(exploringTypes);
 		System.out.println("~~~~~~~~~~~~~~~~~~~~~");*/
 		
 		simplify();
@@ -235,26 +243,28 @@ public abstract class PhpFilesGenerator {
 		}
 	}
 	
-	private void addExploringType(JType type) {
+	private boolean addExploringType(JType type) {
 		if (type.isArray() != null) {
 			type = type.getLeafType();
 		}
 		
 		if (type.isPrimitive() != null) {
-			return;
+			return false;
 		}
 		
 		if (exploringTypes.contains(type)) {
-			return;
+			return false;
 		}
 		
 		if (type.isInterface() != null) {
-			return;
+			return false;
 		}
 		
 		if (isJavaLangType(type)) {
-			return;
+			return false;
 		}
+		
+		boolean adding = false;
 		
 		if (type.isClass() != null) {
 			Set<? extends JClassType> parentSet = ((JClassType) type).getFlattenedSupertypeHierarchy();
@@ -268,10 +278,14 @@ public abstract class PhpFilesGenerator {
 					continue;
 				}
 				exploringTypes.add(classType);
+				adding = true;
 			}
 		} else {
 			exploringTypes.add(type);
+			adding = true;
 		}
+		
+		return adding;
 	}
 	
 	private void simplify() {
@@ -331,22 +345,28 @@ public abstract class PhpFilesGenerator {
 		} 
 	}
 	
-	private void findFieldsAndAnnotations() {
+	private boolean findFieldsAndAnnotations() {
 		ArrayList<JType> exploring = new ArrayList<JType>(exploringTypes);
-		exploringTypes.clear();
+		//exploringTypes.clear();
 		
+		boolean adding = false;
 		for (JType type : exploring) {
 			JClassType classType = type.isClass();
 			if (classType != null && classType.isEnum() == null) {
-				readPhpize(classType);
+				if (readPhpize(classType)) {
+					adding = true;
+				}
 				//System.out.println("#### Read class " + classType.getParameterizedQualifiedSourceName());
 				for (JField field : classType.getFields()) {
 					//System.out.println("#### add field " + field.getName() + " >> " + field.getType().getParameterizedQualifiedSourceName());
-					addExploringType(field.getType());
+					if (addExploringType(field.getType())) {
+						adding = true;
+					}
 				}
 			}
-			exploringTypes.add(type);
+			//exploringTypes.add(type);
 		}
+		return adding;
 	}
 	
 	private void removeDuplicates() {
@@ -369,16 +389,20 @@ public abstract class PhpFilesGenerator {
 		return type.getQualifiedSourceName().startsWith("java.lang.");
 	}
 	
-	private void readPhpize(JClassType classType) {
+	private boolean readPhpize(JClassType classType) {
+		boolean adding = false;
 		Phpize phpize = classType.getAnnotation(Phpize.class);
 		if (phpize != null) {
 			for (Class<?> clazz : phpize.value()) {
 				JClassType type = classType.getOracle().findType(clazz.getCanonicalName());
 				if (type != null) {
-					addExploringType(type);
+					if (addExploringType(type)) {
+						adding = true;
+					}
 				}
 			}
 		}
+		return adding;
 	}
 	
 	private void readDoNotPhpize(JClassType classType) {
