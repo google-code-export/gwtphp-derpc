@@ -1145,12 +1145,21 @@ class ArrayType {
 	private function __construct() {
 	}
 	
+	/**
+	 * param1 : value to fill
+	 * param2..n : dim sizes
+	 * Enter description here ...
+	 */
 	public static function newInstance() {
 		$fill_value = func_get_arg(0);
 	   
 	    for ($arg_index = func_num_args() - 1; $arg_index >= 1; $arg_index--) {
 	        $dim_size = func_get_arg($arg_index);
-	        $fill_value = array_fill(0, $dim_size, $fill_value);
+	        if ($dim_size == 0) {
+				$fill_value = array();
+	        } else {
+	        	$fill_value = array_fill(0, $dim_size, $fill_value);
+	        }
 	    }
 	   
 	    return $fill_value;

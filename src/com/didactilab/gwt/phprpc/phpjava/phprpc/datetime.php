@@ -20,10 +20,7 @@
 
 require_once PHPRPC_ROOT . 'classes.php';
 
-/** @gwtname java.sql.Time */
-class Time {
-	
-}
+define('PHP_DATE_MIN', ~PHP_INT_MAX); 
 
 /** @gwtname java.sql.Timestamp */
 class Timestamp {
@@ -34,7 +31,10 @@ class Timestamp {
 class Date {
 	private $time;
 
-	public function __construct($timestamp = 0) {
+	public function __construct($timestamp = PHP_DATE_MIN) {
+		if ($timestamp == PHP_DATE_MIN) {
+			$timestamp = time() * 1000;
+		}
 		$this->time = (float) $timestamp;
 	}
 
@@ -61,4 +61,10 @@ class Date {
 	public static function time($timestamp) {
 		return (((float) $timestamp) / 1000);
 	}
+
+}
+
+/** @gwtname java.sql.Time */
+class Time extends Date {
+
 }
