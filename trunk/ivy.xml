@@ -3,18 +3,18 @@
 	<info organisation="${org}" module="${module}" />
 	<configurations>
 		<conf name="compile" />
-		<conf name="runtime" extends="compile" />
+		<conf name="runtime" />
 		<conf name="tests" />
 		<conf name="samples" />
-		<conf name="sources" extends="compile" />
+		<conf name="sources" />
 		<conf name="war" />
 	</configurations>
 	<publications>
 		<artifact type="jar" ext="jar" />
 		<artifact type="source" ext="jar" conf="sources" />
 	</publications>
-	<dependencies>
-		<dependency org="com.google.gwt" name="gwt-dev" rev="2.4.0" />
-		<dependency org="com.google.gwt" name="gwt-user" rev="2.4.0" />
+	<dependencies defaultconfmapping="compile->compile(*),default(*);*->@(*)">
+		<dependency org="com.google.gwt" name="gwt-dev" rev="2.4.0" conf="compile"/>
+		<dependency org="com.google.gwt" name="gwt-user" rev="2.4.0" conf="compile"/>
 	</dependencies>
 </ivy-module>
